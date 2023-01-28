@@ -33,6 +33,16 @@
   `(let ((egg:--current-package (quote ,package)))
      (use-package ,package ,@body :straight t)))
 
+(defmacro egg:extend-mode! (extension mode-hook enable &optional disable)
+  (declare (indent 1))
+  `(progn (define-minor-mode ,extension
+	    "Extension mode"
+	    :init-value nil
+	    (if ,extension
+		(,@enable)
+	      (,@disable)))
+	  (add-hook (quote ,mode-hook) (quote ,extension))))
+
 (defun egg:init ()
   (cl-loop for module in (cons 'egg egg:modules) ; Always load the main module
 	   collect (let ((module-symbol (if (consp module)

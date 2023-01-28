@@ -6,12 +6,11 @@
 ;; ----------------------------------------
 ;;          d e v e l o p m e n t
 ;; ----------------------------------------
-(defun al:prog-mode ()
-  (keymap-local-set "M-RET" #'egg:extend-comment)
-  (keymap-local-set "C-c M-q" #'al:reflow-line)
-  (display-line-numbers-mode +1))
-
-(add-hook 'prog-mode-hook #'al:prog-mode)
+(egg:extend-mode! al:prog-extension
+  prog-mode-hook
+  (progn (keymap-local-set "M-RET" #'egg:extend-comment)
+	 (keymap-local-set "C-c M-q" #'al:reflow-line)
+	 (display-line-numbers-mode +1)))
 
 (defun al:c-insert-doc-comment ()
   (interactive)
@@ -28,14 +27,16 @@
     (insert " */")
     (previous-line)))
 
-(defun al:c-mode ()
-  (c-set-style "bsd")
-  (setq c-basic-offset 4)
-  (c-set-offset 'case-label '+)
-  (c-set-offset 'access-label '-)
-  (c-set-offset 'inclass #'al:c-lineup)
-  (indent-tabs-mode -1)
-  (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
+(defun al:c-lineup (langelem)
+  (let ((inclass (assoc 'inclass c-syntactic-context)))
+    (save-excursion
+      (c-beginning-of-defun)
+      (if (or (looking-at "struct")
+	      (looking-at "typedef struct")
+	      (looking-at "union")
+	      (looking-at "typedef union"))
+	  '+
+	'++))))
 
 (defun al:reflow-line ()
   (interactive)
@@ -49,25 +50,23 @@
       (narrow-to-region begin end)
       (prog-fill-reindent-defun))))
 
-(defun al:c-lineup (langelem)
-  (let ((inclass (assoc 'inclass c-syntactic-context)))
-    (save-excursion
-      (c-beginning-of-defun)
-      (if (or (looking-at "struct")
-	      (looking-at "typedef struct")
-	      (looking-at "union")
-	      (looking-at "typedef union"))
-	  '+
-	'++))))
+(egg:extend-mode! al:c-extension
+  c-mode-common-hook
+  (progn (setq c-basic-offset 4)
+	   (c-set-style "bsd")
+	   (setq c-basic-offset 4)
+	   (c-set-offset 'case-label '+)
+	   (c-set-offset 'access-label '-)
+	   (c-set-offset 'inclass #'al:c-lineup)
+	   (indent-tabs-mode -1)
+	   
+	   (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment)))
 
-(add-hook 'c-mode-common-hook #'al:c-mode)
-
-(defun al:lsp-mode ()
+(egg:extend-mode! al:lsp-extension
+  lsp-mode-hook
   (keymap-local-set "C-c l" (define-keymap
 			      "r" #'lsp-rename
 			      "f" #'lsp-format-buffer)))
-
-(add-hook 'lsp-mode-hook #'al:lsp-mode)
 
 (setq-default display-line-numbers-width 4)
 
@@ -75,15 +74,12 @@
 ;;             o r g - m o d e
 ;; ----------------------------------------
 
-;; Stolen from Doom
-(define-minor-mode al:org-pretty-mode
-  "Hide emphasis markers and toggles pretty entities"
-  :init-value nil
-  :lighter " *"
-  (setq org-hide-emphasis-markers al:org-pretty-mode)
-  (org-toggle-pretty-entities)
-  (with-silent-modifications
-    (org-table-map-tables 'org-table-align t)))
+(egg:extend-mode! al:org-extension org-mode-hook
+  (progn (setq org-hide-emphasis-markers t)
+	 (org-toggle-pretty-entities)
+	 (with-silent-modifications
+	   (org-table-map-tables 'org-table-align t)))
+  nil)
 
 (egg:package! org-fragtog
   :defer t
@@ -172,32 +168,31 @@
 (defvar al:vfc-text-scale 1.5
   "Text scale for visual-fill-column-mode")
 
-(define-minor-mode al:visual-fill-column-mode
-  "Customized visual-fill-column-mode"
-  :init-value nil
-  :lighter "VF"
-  (if al:visual-fill-column-mode
-      (progn
-	(setq al:--vfc-restore-line-numbers display-line-numbers-mode
-	      al:--vfc-restore-text-scale text-scale-mode-amount)
-	
-	(setq-local visual-fill-column-center-text t)
-	
-	(visual-fill-column-mode 1)
-	(display-line-numbers-mode -1)
-	(text-scale-set al:vfc-text-scale))
-    (progn
-      (when al:--vfc-restore-line-numbers
-	(display-line-numbers-mode 1))
-      
-      (when al:--vfc-restore-text-scale
-	(text-scale-set al:--vfc-restore-text-scale))
-      
-      (visual-fill-column-mode -1))))
+(egg:extend-mode! al:visual-fill-column-mode-extension
+  visual-fill-column-mode-hook
+  
+  (progn
+    (setq al:--vfc-restore-line-numbers display-line-numbers-mode
+	  al:--vfc-restore-text-scale text-scale-mode-amount)
+    
+    (setq-local visual-fill-column-center-text t)
+    
+    (visual-fill-column-mode 1)
+    (display-line-numbers-mode -1)
+    (text-scale-set al:vfc-text-scale))
+  
+  (progn
+    (when al:--vfc-restore-line-numbers
+      (display-line-numbers-mode 1))
+    
+    (when al:--vfc-restore-text-scale
+      (text-scale-set al:--vfc-restore-text-scale))
+    
+    (visual-fill-column-mode -1)))
 
 ;; Global user interface keybinds
 (keymap-global-set "C-c t" (define-keymap
-			     "z" #'al:visual-fill-column-mode))
+			     "z" #'visual-fill-column-mode))
 
 (egg:package! doom-themes
   :config (setq doom-themes-enable-bold t
