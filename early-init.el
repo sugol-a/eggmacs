@@ -33,15 +33,21 @@
   `(let ((egg:--current-package (quote ,package)))
      (use-package ,package ,@body :straight t)))
 
-(defmacro egg:extend-mode! (extension mode-hook enable &optional disable)
+(defmacro egg:extend-mode! (mode enable &rest flags)
   (declare (indent 1))
-  `(progn (define-minor-mode ,extension
-	    "Extension mode"
-	    :init-value nil
-	    (if ,extension
-		(,@enable)
-	      (,@disable)))
-	  (add-hook (quote ,mode-hook) (quote ,extension))))
+  (let ((minor-mode-symbol (gensym (concat (symbol-name mode) "-extension-mode-"))))
+    `(progn (define-minor-mode ,minor-mode-symbol
+	      ,(concat "Extension mode for " (symbol-name mode))
+	      :init-value nil
+	      (if ,minor-mode-symbol
+		  (,@enable)
+		(,@(plist-get flags :disable))))
+	    ,(if (plist-get flags :hook)
+		 `(add-hook (quote ,mode) (lambda () (,minor-mode-symbol 1)))
+	       `(add-hook 'after-change-major-mode-hook
+			  (lambda ()
+			    (when (eq major-mode (quote ,mode))
+			      (,minor-mode-symbol 1))))))))
 
 (defun egg:init ()
   (cl-loop for module in (cons 'egg egg:modules) ; Always load the main module
