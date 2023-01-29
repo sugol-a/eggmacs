@@ -6,11 +6,11 @@
 ;; ----------------------------------------
 ;;          d e v e l o p m e n t
 ;; ----------------------------------------
-(egg:extend-mode! al:prog-extension
-  prog-mode-hook
+(egg:extend-mode! prog-mode-hook
   (progn (keymap-local-set "M-RET" #'egg:extend-comment)
 	 (keymap-local-set "C-c M-q" #'al:reflow-line)
-	 (display-line-numbers-mode +1)))
+	 (display-line-numbers-mode +1))
+  :hook t)
 
 (defun al:c-insert-doc-comment ()
   (interactive)
@@ -50,7 +50,7 @@
       (narrow-to-region begin end)
       (prog-fill-reindent-defun))))
 
-(egg:extend-mode! al:c-extension
+(egg:extend-mode! 
   c-mode-common-hook
   (progn (setq c-basic-offset 4)
 	   (c-set-style "bsd")
@@ -60,13 +60,15 @@
 	   (c-set-offset 'inclass #'al:c-lineup)
 	   (indent-tabs-mode -1)
 	   
-	   (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment)))
+	   (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
+  :hook t)
 
 (egg:extend-mode! al:lsp-extension
   lsp-mode-hook
   (keymap-local-set "C-c l" (define-keymap
 			      "r" #'lsp-rename
-			      "f" #'lsp-format-buffer)))
+			      "f" #'lsp-format-buffer))
+  :hook t)
 
 (setq-default display-line-numbers-width 4)
 
@@ -74,12 +76,11 @@
 ;;             o r g - m o d e
 ;; ----------------------------------------
 
-(egg:extend-mode! al:org-extension org-mode-hook
+(egg:extend-mode! org-mode
   (progn (setq org-hide-emphasis-markers t)
 	 (org-toggle-pretty-entities)
 	 (with-silent-modifications
-	   (org-table-map-tables 'org-table-align t)))
-  nil)
+	   (org-table-map-tables 'org-table-align t))))
 
 (egg:package! org-fragtog
   :defer t
@@ -102,8 +103,8 @@
   (org-indent-mode +1)
   (al:org-pretty-mode +1)
 
-  (setq visual-fill-column-width 100
-	fill-column 80)
+  (setq-local visual-fill-column-width 100
+	      fill-column 80)
 
   (setq-local visual-fill-column-center-text t)
   (visual-fill-column-mode +1)
@@ -168,9 +169,7 @@
 (defvar al:vfc-text-scale 1.5
   "Text scale for visual-fill-column-mode")
 
-(egg:extend-mode! al:visual-fill-column-mode-extension
-  visual-fill-column-mode-hook
-  
+(egg:extend-mode! visual-fill-column-mode-hook
   (progn
     (setq al:--vfc-restore-line-numbers display-line-numbers-mode
 	  al:--vfc-restore-text-scale text-scale-mode-amount)
@@ -180,7 +179,8 @@
     (visual-fill-column-mode 1)
     (display-line-numbers-mode -1)
     (text-scale-set al:vfc-text-scale))
-  
+
+  :disable
   (progn
     (when al:--vfc-restore-line-numbers
       (display-line-numbers-mode 1))
@@ -188,7 +188,9 @@
     (when al:--vfc-restore-text-scale
       (text-scale-set al:--vfc-restore-text-scale))
     
-    (visual-fill-column-mode -1)))
+    (visual-fill-column-mode -1))
+  
+  :hook t)
 
 ;; Global user interface keybinds
 (keymap-global-set "C-c t" (define-keymap
