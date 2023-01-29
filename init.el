@@ -77,10 +77,30 @@
 ;; ----------------------------------------
 
 (egg:extend-mode! org-mode
-  (progn (setq org-hide-emphasis-markers t)
-	 (org-toggle-pretty-entities)
-	 (with-silent-modifications
-	   (org-table-map-tables 'org-table-align t))))
+  (progn
+    (setq-local org-hide-emphasis-markers t
+		visual-fill-column-width 100
+		visual-fill-column-center-text t
+		fill-column 80
+		face-remapping-alist (let* ((background (face-attribute 'default :background))
+					    (face `(:inherit al:org-subtle :box (:color ,background :line-width (12 . 12) :style flat))))
+				       `((header-line . ,face)
+					 (mode-line . ,face)
+					 (mode-line-active . ,face))))
+    (visual-fill-column-mode +1)
+    (org-toggle-pretty-entities)
+    (org-indent-mode +1)
+    (al:org-update-header)
+    (al:org-update-mode-line)
+    
+    (with-silent-modifications
+      (org-table-map-tables 'org-table-align t))
+
+    (add-hook 'after-change-functions #'al:org-buffer-change-hook 0 t)
+    (add-hook 'window-configuration-change-hook #'al:org-update-header 0 t)
+    (add-hook 'window-configuration-change-hook #'al:org-update-mode-line 0 t)
+    (add-hook 'after-save-hook #'al:org-update-mode-line)
+    ))
 
 (egg:package! org-fragtog
   :defer t
@@ -99,30 +119,6 @@
   `((t :inherit default :foreground "#707070" :weight light))
   "Face for subtle elements")
 
-(defun al:org-mode ()
-  (org-indent-mode +1)
-  (al:org-pretty-mode +1)
-
-  (setq-local visual-fill-column-width 100
-	      fill-column 80)
-
-  (setq-local visual-fill-column-center-text t)
-  (visual-fill-column-mode +1)
-
-  (setq-local face-remapping-alist
-	      (let* ((background (face-attribute 'default :background))
-		     (face `(:inherit al:org-subtle :box (:color ,background :line-width (12 . 12) :style flat))))
-		`((header-line . ,face)
-		  (mode-line . ,face)
-		  (mode-line-active . ,face))))
-
-  (al:org-update-header)
-  (al:org-update-mode-line)
-  (add-hook 'after-change-functions #'al:org-buffer-change-hook 0 t)
-  (add-hook 'window-configuration-change-hook #'al:org-update-header 0 t)
-  (add-hook 'window-configuration-change-hook #'al:org-update-mode-line 0 t)
-  (add-hook 'after-save-hook #'al:org-update-mode-line))
-
 (defun al:org-update-header ()
   (let* ((count (count-words (point-min) (point-max)))
 	 (word-count-string (format "%d words" count)))
@@ -140,7 +136,10 @@
   (al:org-update-header)
   (al:org-update-mode-line))
 
-(setq org-babel-load-languages (cl-map 'list (lambda (lang) `(,lang . t)) '(dot emacs-lisp python))
+(defvar al:org-babel-load-languages
+  '(dot emacs-lisp python))
+
+(setq org-babel-load-languages (cl-map 'list (lambda (lang) `(,lang . t)) al:org-babel-load-languages)
 
       ;; Allows us to underline an entire heading using
       org-fontify-whole-heading-line t
@@ -160,8 +159,6 @@
  '(org-level-7 ((t (:inherit default :weight bold))))
  '(org-level-8 ((t (:inherit default :weight bold)))))
 
-(add-hook 'org-mode-hook #'al:org-mode)
-
 ;; ----------------------------------------
 ;;               v i s u a l
 ;; ----------------------------------------
@@ -176,7 +173,6 @@
     
     (setq-local visual-fill-column-center-text t)
     
-    (visual-fill-column-mode 1)
     (display-line-numbers-mode -1)
     (text-scale-set al:vfc-text-scale))
 
@@ -186,9 +182,7 @@
       (display-line-numbers-mode 1))
     
     (when al:--vfc-restore-text-scale
-      (text-scale-set al:--vfc-restore-text-scale))
-    
-    (visual-fill-column-mode -1))
+      (text-scale-set al:--vfc-restore-text-scale)))
   
   :hook t)
 
@@ -203,7 +197,6 @@
 ;; ----------------------------------------
 ;;               e d i t o r
 ;; ----------------------------------------
-
 (defun al:duplicate-line (&optional arg)
   (interactive "p")
   (let ((beg-end (save-excursion
