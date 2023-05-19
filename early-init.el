@@ -59,6 +59,9 @@
 				   "/"
 				   (symbol-name module-symbol))))))
 
+(defun egg:show-startup-time ()
+  (message "eggmacs started in %s" (emacs-init-time)))
+
 ;; Prevent gc cleanup while we initialise
 (setq gc-cons-threshold most-positive-fixnum)
 
@@ -72,3 +75,5 @@
 
 (add-hook 'before-init-hook #'egg:--early-straight-setup)
 (add-hook 'after-init-hook #'egg:--early-init-cleanup)
+
+(advice-add 'display-startup-echo-area-message :override #'egg:show-startup-time)
