@@ -1,5 +1,8 @@
-# 🥚macs
-*My personal Emacs config*
+![](splash/splash.png)
+
+---
+
+My personal emacs config.
 
 Install:
 
