@@ -5,6 +5,8 @@
 				     "/splash/splash.gif"
 				   "/splash/splash.png")))
 
+(defvar egg:splash-animation-delay 0.5)
+
 (defvar egg:splash-slogans
   '("Potentially carcinogenic!"
     "Completely tax-exempt!"
@@ -129,7 +131,12 @@
 						(egg:--splash-set-fringe)
 						(egg:--splash-update-subtitle)) 0 t)
   (when (image-multi-frame-p egg:--splash-image)
-    (add-hook 'window-setup-hook (lambda () (image-animate egg:--splash-image)) 0 t)))
+    (add-hook 'window-setup-hook (lambda ()
+				   (if egg:splash-animation-delay
+				       (run-with-timer egg:splash-animation-delay
+						       nil
+						       (lambda () (image-animate egg:--splash-image)))
+				     (image-animate egg:--splash-image))) 0 t)))
 
 (defun egg:make-splash-buffer ()
   (interactive)
@@ -144,5 +151,8 @@
 
   (egg:with-parameter! image
     (setq egg:splash-image image))
+
+  (egg:with-parameter! animation-delay
+    (setq egg:splash-animation-delay animation-delay))
 
   (setq initial-buffer-choice #'egg:make-splash-buffer))

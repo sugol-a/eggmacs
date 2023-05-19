@@ -367,6 +367,6 @@
 				  ("\\.hpp$" . al:auto-insert-header-c++)
 				  ("^meson\\.build" . al:auto-insert-meson)
 				  ("^main\\.rs" . al:auto-insert-main-rust))))
-	(splash)))
+	(splash :animation-delay 0.8)))
 
 (egg:init)
