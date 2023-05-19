@@ -1,4 +1,7 @@
 (egg:module! ui
+
+  (setq frame-title-format '(multiple-frames "%b"
+					    ("" "%b - Eggmacs @ " system-name)))
   
   (egg:feature-gate! +vertico
     (egg:package! vertico
