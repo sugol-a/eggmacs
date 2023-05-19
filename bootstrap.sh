@@ -16,4 +16,4 @@ require emacs
 [[ -d ~/.emacs.d/ ]] && die "already a .emacs.d directory present."
 
 git clone https://github.com/sugol-a/eggmacs ~/.emacs.d
-exec emacs
+nohup emacs&
