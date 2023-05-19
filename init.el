@@ -238,6 +238,8 @@
 
 (add-hook 'after-init-hook #'al:configure-mode-line)
 
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 (setq frame-resize-pixelwise t)
 
 ;; ----------------------------------------
