@@ -1,7 +1,9 @@
 (defvar egg:splash-buffer-name "*eggmacs*")
 
 (defvar egg:splash-image (concat (expand-file-name user-emacs-directory)
-				 "/splash/splash.png"))
+				 (if (image-type-available-p 'gif)
+				     "/splash/splash.gif"
+				   "/splash/splash.png")))
 
 (defvar egg:splash-slogans
   '("Potentially carcinogenic!"
@@ -125,7 +127,9 @@
 
   (add-hook 'window-configuration-change-hook (lambda ()
 						(egg:--splash-set-fringe)
-						(egg:--splash-update-subtitle)) 0 t))
+						(egg:--splash-update-subtitle)) 0 t)
+  (when (image-multi-frame-p egg:--splash-image)
+    (add-hook 'window-setup-hook (lambda () (image-animate egg:--splash-image)) 0 t)))
 
 (defun egg:make-splash-buffer ()
   (interactive)
