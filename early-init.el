@@ -1,4 +1,5 @@
 ;; -*- lexical-binding: t; -*- 
+(require 'comp)
 
 (defun egg:--early-straight-setup ()
   (defvar bootstrap-version)

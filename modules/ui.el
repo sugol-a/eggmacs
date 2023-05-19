@@ -32,7 +32,7 @@
       (zoom-mode +1)
       :config
       (egg:bind-parameters! zoom
-	  (:size . zoom-size))))
+	(:size . zoom-size))))
 
   (egg:feature-gate! +which-key
     (egg:package! which-key
@@ -40,7 +40,12 @@
       (which-key-mode +1)
       :config
       (egg:bind-parameters! which-key
-	  (:delay . which-key-idle-delay))))
+	(:delay . which-key-idle-delay))))
+
+  (egg:feature-gate! +mood-line
+    (egg:package! mood-line
+      :config
+      (mood-line-mode)))
 
   (egg:with-parameter! theme
     (load-theme theme t))

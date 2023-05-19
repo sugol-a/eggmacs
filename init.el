@@ -1,3 +1,5 @@
+(defvar native-comp-deferred-compilation-deny-list nil)
+
 (setq user-full-name "Alister Sanders"
       user-mail-address "alister@sugol.org"
       custom-file "/dev/null"
@@ -53,24 +55,115 @@
 (egg:extend-mode! 
   c-mode-common-hook
   (progn (setq c-basic-offset 4)
-	   (c-set-style "bsd")
-	   (setq c-basic-offset 4)
-	   (c-set-offset 'case-label '+)
-	   (c-set-offset 'access-label '-)
-	   (c-set-offset 'inclass #'al:c-lineup)
-	   (indent-tabs-mode -1)
+	 (c-set-style "bsd")
+	 (setq c-basic-offset 4)
+	 (c-set-offset 'case-label '+)
+	 (c-set-offset 'access-label '-)
+	 (c-set-offset 'inclass #'al:c-lineup)
+	 (indent-tabs-mode -1)
 	   
-	   (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
+	 (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
   :hook t)
 
-(egg:extend-mode! al:lsp-extension
-  lsp-mode-hook
+(egg:extend-mode! lsp-mode-hook
   (keymap-local-set "C-c l" (define-keymap
 			      "r" #'lsp-rename
-			      "f" #'lsp-format-buffer))
+			      "f" #'lsp-format-buffer
+			      "a" #'lsp-execute-code-action))
   :hook t)
 
+(egg:package! svelte-mode)
+
+(egg:package! lice
+  :config
+  (setq lice:default-license "mit"))
+
 (setq-default display-line-numbers-width 4)
+
+(setq js-jsx-syntax t)
+
+(egg:extend-mode! js-mode-hook
+  (progn
+    (indent-tabs-mode -1)
+    (setq-local tab-width 4
+          js-indent-level 4))
+  
+  :hook t)
+
+(defun al:typescript-indent-setup ()
+  (indent-tabs-mode -1)
+  (setq-local tab-width 4
+	      js-indent-level 4
+	      typescript-ts-mode-indent-offset 4))
+
+(egg:extend-mode! typescript-ts-mode-hook
+  (al:typescript-indent-setup)
+  :hook t)
+
+(egg:extend-mode! tsx-ts-mode-hook
+  (al:typescript-indent-setup)
+  :hook t)
+
+(defun al:insert-snippet (name)
+  (insert name)
+  (yas-expand))
+
+(defun al:insert-default-license ()
+  (interactive)
+  (lice lice:default-license))
+
+(defun al:auto-insert-main-c ()
+  (al:insert-default-license)
+  (newline)
+  (insert "#include <stdio.h>\n"
+	  "#include <stdlib.h>\n")
+  (newline)
+  (al:insert-snippet "main"))
+
+(defun al:auto-insert-header-c ()
+  (al:insert-default-license)
+  (newline)
+  (al:insert-snippet "once"))
+
+(defun al:auto-insert-main-c++ ()
+  (al:insert-default-license)
+  (newline)
+  (insert "#include <iostream>\n")
+  (newline)
+  (al:insert-snippet "main"))
+
+(defun al:auto-insert-header-c++ ()
+  (al:insert-default-license)
+  (newline)
+  (al:insert-snippet "guard")
+  (yas-next-field)
+  (yas-exit-all-snippets)
+  (al:insert-snippet "cls11"))
+
+(defun al:auto-insert-meson ()
+  (let ((project-name (or (projectile-project-name)
+			  (file-name-base (file-name-directory (buffer-file-name)))
+			  "project-name")))
+    (save-excursion
+      (al:insert-default-license)
+      (newline)
+      (insert (format "project('%s', 'c',\n" project-name)
+	      (format "        version: '0.1',\n")
+	      (format "        default_options: ['warning_level=3'])\n"))
+      (newline)
+      (insert "pkg = import('pkgconfig')\n\n"
+	      "deps = [  ]\n\n"
+	      "inc = include_directories('.')\n\n"
+	      "sources = [  ]\n\n"
+	      (format "exe = executable('%s',\n" project-name)
+	      (format "                 sources: sources,\n")
+	      (format "                 include_directories: inc,\n")
+	      (format "                 dependencies: deps)")))))
+
+(defun al:auto-insert-main-rust ()
+  (al:insert-default-license)
+  (newline)
+  (al:insert-snippet "main"))
 
 ;; ----------------------------------------
 ;;             o r g - m o d e
@@ -79,15 +172,12 @@
 (egg:extend-mode! org-mode
   (progn
     (setq-local org-hide-emphasis-markers t
-		visual-fill-column-width 100
-		visual-fill-column-center-text t
 		fill-column 80
 		face-remapping-alist (let* ((background (face-attribute 'default :background))
 					    (face `(:inherit al:org-subtle :box (:color ,background :line-width (12 . 12) :style flat))))
 				       `((header-line . ,face)
 					 (mode-line . ,face)
 					 (mode-line-active . ,face))))
-    (visual-fill-column-mode +1)
     (org-toggle-pretty-entities)
     (org-indent-mode +1)
     (al:org-update-header)
@@ -99,48 +189,17 @@
     (add-hook 'after-change-functions #'al:org-buffer-change-hook 0 t)
     (add-hook 'window-configuration-change-hook #'al:org-update-header 0 t)
     (add-hook 'window-configuration-change-hook #'al:org-update-mode-line 0 t)
-    (add-hook 'after-save-hook #'al:org-update-mode-line)
-    ))
+    (add-hook 'after-save-hook #'al:org-update-mode-line)))
 
 (egg:package! org-fragtog
   :defer t
   :hook (org-mode . org-fragtog-mode)
   :commands (org-fragtog-mode))
 
-(egg:package! org-drill
-  :defer t
-  :commands (org-drill))
-
-(egg:package! visual-fill-column
-  :defer t
-  :commands (visual-fill-column-mode))
-
-(defface al:org-subtle
-  `((t :inherit default :foreground "#707070" :weight light))
-  "Face for subtle elements")
-
-(defun al:org-update-header ()
-  (let* ((count (count-words (point-min) (point-max)))
-	 (word-count-string (format "%d words" count)))
-    (setq header-line-format (format (format "%%%ds" (- (window-total-width) (length word-count-string))) word-count-string))))
-
-(defun al:org-update-mode-line ()
-  (setq-local mode-line-format
-	      `("%b"
-		;;mode-line-buffer-identification
-		,(if (buffer-modified-p)
-		     " [*]"
-		   ""))))
-
-(defun al:org-buffer-change-hook (beg end len)
-  (al:org-update-header)
-  (al:org-update-mode-line))
-
 (defvar al:org-babel-load-languages
   '(dot emacs-lisp python))
 
 (setq org-babel-load-languages (cl-map 'list (lambda (lang) `(,lang . t)) al:org-babel-load-languages)
-
       ;; Allows us to underline an entire heading using
       org-fontify-whole-heading-line t
 
@@ -163,40 +222,35 @@
 ;;               v i s u a l
 ;; ----------------------------------------
 
-(defvar al:vfc-text-scale 1.5
-  "Text scale for visual-fill-column-mode")
-
-(egg:extend-mode! visual-fill-column-mode-hook
-  (progn
-    (setq al:--vfc-restore-line-numbers display-line-numbers-mode
-	  al:--vfc-restore-text-scale text-scale-mode-amount)
-    
-    (setq-local visual-fill-column-center-text t)
-    
-    (display-line-numbers-mode -1)
-    (text-scale-set al:vfc-text-scale))
-
-  :disable
-  (progn
-    (when al:--vfc-restore-line-numbers
-      (display-line-numbers-mode 1))
-    
-    (when al:--vfc-restore-text-scale
-      (text-scale-set al:--vfc-restore-text-scale)))
-  
-  :hook t)
-
-;; Global user interface keybinds
-(keymap-global-set "C-c t" (define-keymap
-			     "z" #'visual-fill-column-mode))
-
 (egg:package! doom-themes
   :config (setq doom-themes-enable-bold t
 		doom-themes-enable-italic t))
 
+(defvar al:mode-line-padding '(1 . 8))
+
+(defun al:configure-mode-line ()
+  (let ((mode-line-bg (car (alist-get 'mode-line doom-themes--colors)))
+	(mode-line-inactive-bg (car (alist-get 'mode-line-inactive doom-themes--colors))))
+    (set-face-attribute 'mode-line nil
+			:box `(:line-width ,al:mode-line-padding :color ,mode-line-bg :style flat-button))
+    (set-face-attribute 'mode-line-inactive nil
+			:box `(:line-width ,al:mode-line-padding :color ,mode-line-inactive-bg :style flat-button))))
+
+(add-hook 'after-init-hook #'al:configure-mode-line)
+
+(setq frame-resize-pixelwise t)
+
 ;; ----------------------------------------
 ;;               e d i t o r
 ;; ----------------------------------------
+(defun al:line-extents ()
+  (save-excursion
+    (beginning-of-line)
+    (let ((bol (point)))
+      (end-of-line)
+      (let ((eol (point)))
+	`(,bol . ,eol)))))
+
 (defun al:duplicate-line (&optional arg)
   (interactive "p")
   (let ((beg-end (save-excursion
@@ -219,15 +273,56 @@
 
 (keymap-global-set "C-c d" #'al:duplicate-line)
 
+(defun al:move-line-up ()
+  (interactive)
+  (let* ((line-extents (al:line-extents))
+	 (bol (car line-extents))
+	 (eol (cdr line-extents))
+	 (current-point (point))
+	 (column (- current-point bol)))
+    (kill-whole-line)
+    (previous-line)
+    (yank)
+    (previous-line)
+    (beginning-of-line)
+    (forward-char column)
+    (when kill-ring
+      (setq kill-ring (cdr kill-ring)))))
+
+(defun al:move-line-down ()
+  (interactive)
+  (let* ((line-extents (al:line-extents))
+	 (bol (car line-extents))
+	 (eol (cdr line-extents))
+	 (current-point (point))
+	 (column (- current-point bol)))
+    (kill-whole-line)
+    (next-line)
+    (yank)
+    (previous-line)
+    (beginning-of-line)
+    (forward-char column)
+    (when kill-ring
+      (setq kill-ring (cdr kill-ring)))))
+
+(keymap-global-set "M-<up>" #'al:move-line-up)
+(keymap-global-set "M-<down>" #'al:move-line-down)
+
+(egg:package! orderless
+  :init
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
 ;; ----------------------------------------
 ;;                   🥚
 ;; ----------------------------------------
 
 (setq egg:modules
       `((ui
-	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key)
-	 :theme doom-1337
-	 :font ,(font-spec :family "IBM Plex Mono" :size 16 :weight 'regular)
+	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line)
+	 :theme doom-moonlight
+	 :font ,(font-spec :family "SF Mono" :size 16 :weight 'medium)
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
 	 :smooth-scroll t
 	 :keys (:treemacs
@@ -238,15 +333,15 @@
 	 :which-key (:delay 0.1))
 	
 	(dev
-	 :features (+projectile +company +flycheck +lsp +lsp-ui +rust +meson)
+	 :features (+projectile +company +flycheck +lsp +lsp-ui +rust +meson +python +pyright +pipenv +pyvenv +typescript)
 	 :keys (:projectile
 		(("C-c p" . projectile-command-map)))
-	 :lsp (:hooks (c-mode-hook))
+	 :lsp (:hooks (c-mode-hook python-mode-hook js-mode-hook jsx-mode-hook c++-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
 	 :lsp-ui (:disable-features (doc-hover-mouse))
 	 :company (:delay 0.1 :min-prefix 2))
 
 	(edit
-	 :features (+expand +mc +smartparens +snippet +bol-or-text +focus)
+	 :features (+expand +mc +smartparens +snippet +bol-or-text +focus +autoinsert)
 	 :keys (:expand
 		(("C-=" . er/expand-region))
 		:mc
@@ -258,6 +353,18 @@
 		(("M-p" . ,(define-keymap
 			     "u" #'sp-unwrap-sexp
 			     "f" #'sp-forward-sexp
-			     "b" #'sp-backward-sexp)))))))
+			     "b" #'sp-backward-sexp
+			     "(" #'sp-wrap-round
+			     "[" #'sp-wrap-square
+			     "{" #'sp-wrap-curly))))
+	 :autoinsert (:templates (("^main\\.c$" . al:auto-insert-main-c)
+				  ("\\.c$" . al:insert-default-license)
+				  ("\\.h$" . al:auto-insert-header-c)
+				  ("^main\\.cpp$" . al:auto-insert-main-c++)
+				  ("\\.cpp$" . al:insert-default-license)
+				  ("\\.hpp$" . al:auto-insert-header-c++)
+				  ("^meson\\.build" . al:auto-insert-meson)
+				  ("^main\\.rs" . al:auto-insert-main-rust))))
+	(splash)))
 
 (egg:init)

@@ -82,5 +82,28 @@
   (egg:feature-gate! +rust
     (egg:package! rustic))
 
+  (egg:feature-gate! +typescript
+    (push '(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src" nil nil)
+	  treesit-language-source-alist)
+    (push '(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src" nil nil)
+	  treesit-language-source-alist)
+
+    (add-to-list 'auto-mode-alist '("\\.tsx?" . typescript-ts-mode)))
+
   (egg:feature-gate! +meson
-    (egg:package! meson-mode)))
+    (egg:package! meson-mode))
+
+  (egg:feature-gate! '(+python +pipenv)
+    (egg:package! pipenv
+      :hook (python-mode . pipenv-mode)
+      :init (setq pipenv-projectile-after-switch-function #'pipenv-projectile-after-switch-extended)))
+
+  (egg:feature-gate! '(+python +pyvenv)
+    (egg:package! pyvenv
+      :ensure t
+      :init (setenv "WORKON_HOME" "~/.local/share/virtualenvs")))
+
+  (egg:feature-gate! '(+python +pyright +lsp)
+    (egg:package! lsp-pyright
+      :hook (python-mode . (lambda ()
+			     (require 'lsp-pyright))))))

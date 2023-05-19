@@ -1,5 +1,21 @@
-(egg:module! edit
+(defvar egg:--auto-insert-template-alist ()
+  '(("\\.c$" . "This is a test")))
 
+(defun egg:--auto-insert-template ()
+  (when-let* ((filename (file-name-nondirectory (buffer-file-name)))
+	      (action (cdr (seq-find (lambda (elem)
+				       (string-match-p (car elem) filename))
+				     egg:--auto-insert-template-alist))))
+    (cond ((stringp action) (progn
+			      (beginning-of-buffer)
+			      (insert action)))
+	  ((functionp action) (funcall action)))))
+
+(defun egg:--maybe-auto-insert-template ()
+  (when (eq 0 (- (point-max) (point-min)))
+    (egg:--auto-insert-template)))
+
+(egg:module! edit
   (defun egg:beginning-of-line-or-text ()
     (interactive)
     (let ((current-position (point)))
@@ -35,4 +51,9 @@
     (egg:package! yasnippet-snippets))
 
   (egg:feature-gate! +focus
-    (egg:package! focus)))
+    (egg:package! focus))
+
+  (egg:feature-gate! +autoinsert
+    (egg:bind-parameters! autoinsert
+      (:templates . egg:--auto-insert-template-alist))
+    (add-hook 'find-file-hook #'egg:--maybe-auto-insert-template)))
