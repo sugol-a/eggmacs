@@ -4,6 +4,7 @@ set -xe
 
 die() {
     echo -e "$@" >&2
+    exit 1
 }
 
 require() {
