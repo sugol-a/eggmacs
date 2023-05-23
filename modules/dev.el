@@ -79,6 +79,10 @@
 	      ;; TODO: the rest of them lol
 	      ))))
 
+  (egg:feature-gate! +treesit
+    (egg:package! treesit-auto
+      :config (global-treesit-auto-mode)))
+
   (egg:feature-gate! +rust
     (egg:package! rustic))
 
