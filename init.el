@@ -242,6 +242,58 @@
 
 (setq frame-resize-pixelwise t)
 
+(defvar al:glasses-fringe-width 340
+  "Fringe width (pixels) to add when al:glasses-mode is enabled.")
+
+(defvar al:glasses-text-scale 0.8
+  "Amount to scale text by when al:glasses-mode is enabled.")
+
+(defvar al:glasses-line-spacing 0.1
+  "Line spacing when al:glasses-mode is enabled.")
+
+(defvar al:glasses-display-line-numbers nil
+  "Set to non-nil to enable line numbers in al:glasses-mode, nil otherwise")
+
+(defvar al:glasses-truncate-lines t
+  "Set to non-nil to enable line truncation in al:glasses-mode, nil otherwise")
+
+(defvar al:glasses-center-point t
+  "Set to non-nil to keep point centered at all times when al:glasses-mode is enabled.")
+
+(define-minor-mode al:glasses-mode
+  "Glasses."
+  :init-value nil
+  :lighter "👓"
+  (let ((inhibit-message t))
+    (if al:glasses-mode
+	(progn
+	  (egg:stash 'al:glasses
+		     `(set-window-fringes . ,(cons nil (window-fringes)))
+		     `(text-scale-set . ,(list text-scale-mode-amount))
+		     `(set-window-configuration . ,(list (current-window-configuration)))
+		     `(toggle-truncate-lines . ,(list truncate-lines))
+		     'line-spacing
+		     'display-line-numbers
+		     'scroll-margin
+		     'maximum-scroll-margin
+		     'mode-line-format)
+	  (set-window-fringes nil
+			      al:glasses-fringe-width
+			      al:glasses-fringe-width)
+	  (text-scale-set al:glasses-text-scale)
+	  (delete-other-windows)
+	  (toggle-truncate-lines al:glasses-truncate-lines)
+	  (setq display-line-numbers al:glasses-display-line-numbers
+		line-spacing al:glasses-line-spacing)
+
+	  (when al:glasses-center-point
+	    (setq-local scroll-margin most-positive-fixnum
+			maximum-scroll-margin 0.5)))
+
+      (egg:unstash 'al:glasses))))
+
+(keymap-global-set "C-c h z" #'al:glasses-mode)
+
 ;; ----------------------------------------
 ;;               e d i t o r
 ;; ----------------------------------------
