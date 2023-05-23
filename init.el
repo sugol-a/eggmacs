@@ -294,6 +294,8 @@
 
 (keymap-global-set "C-c h z" #'al:glasses-mode)
 
+(global-hl-line-mode 1)
+
 ;; ----------------------------------------
 ;;               e d i t o r
 ;; ----------------------------------------
@@ -368,6 +370,13 @@
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
 
+(keymap-global-set "M-o" #'other-window)
+(keymap-global-set "M-2" #'split-window-below)
+(keymap-global-set "M-3" #'split-window-right)
+(keymap-global-set "M-0" #'delete-window)
+
+(global-subword-mode 1)
+
 ;; ----------------------------------------
 ;;                   🥚
 ;; ----------------------------------------
@@ -387,7 +396,19 @@
 	 :which-key (:delay 0.1))
 	
 	(dev
-	 :features (+projectile +company +flycheck +lsp +lsp-ui +rust +meson +python +pyright +pipenv +pyvenv +typescript)
+	 :features (+projectile
+		    +company
+		    +flycheck
+		    +lsp
+		    +lsp-ui
+		    +treesit
+		    +rust
+		    +meson
+		    +python
+		    +pyright
+		    +pipenv
+		    +pyvenv
+		    +typescript)
 	 :keys (:projectile
 		(("C-c p" . projectile-command-map)))
 	 :lsp (:hooks (c-mode-hook python-mode-hook js-mode-hook jsx-mode-hook c++-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
@@ -422,3 +443,4 @@
 	(splash :animation-delay 0.8)))
 
 (egg:init)
+(put 'list-timers 'disabled nil)
