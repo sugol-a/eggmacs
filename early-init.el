@@ -50,6 +50,12 @@
 			    (when (eq major-mode (quote ,mode))
 			      (,minor-mode-symbol 1))))))))
 
+(defmacro egg:machines! (body &optional default)
+  (declare (indent 1))
+  (if-let ((host-thunk (alist-get system-name body nil nil #'string=)))
+      host-thunk
+    default))
+
 (defun egg:init ()
   (cl-loop for module in (cons 'egg egg:modules) ; Always load the main module
 	   collect (let ((module-symbol (if (consp module)

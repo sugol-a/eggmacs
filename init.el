@@ -85,10 +85,16 @@
 (egg:extend-mode! js-mode-hook
   (progn
     (indent-tabs-mode -1)
-    (setq-local tab-width 4
-          js-indent-level 4))
+    (setq-local tab-width 2
+		js-indent-level 2
+		js-switch-indent-offset 2)
+    (keymap-local-set "M-." #'lsp-find-definition))
   
   :hook t)
+
+(egg:extend-mode! emacs-lisp-mode
+  (progn
+    (company-mode)))
 
 (defun al:typescript-indent-setup ()
   (indent-tabs-mode -1)
@@ -238,8 +244,6 @@
 
 (add-hook 'after-init-hook #'al:configure-mode-line)
 
-;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
 (setq frame-resize-pixelwise t)
 
 (defvar al:glasses-fringe-width 340
@@ -377,6 +381,19 @@
 
 (global-subword-mode 1)
 
+(egg:machines!
+ (("Alisters-iMac.local" . (progn
+				(setq ns-command-modifier 'meta
+				      ns-alternate-modifier 'super)
+                                (keymap-global-set "<end>" #'move-end-of-line)
+                                (keymap-global-set "<home>" #'egg:beginning-of-line-or-text)
+				(add-to-list 'default-frame-alist '(fullscreen . fullscreen))))))
+
+(keymap-global-set "M-o" #'other-window)
+(keymap-global-set "M-2" #'split-window-vertically)
+(keymap-global-set "M-3" #'split-window-horizontally)
+(keymap-global-set "M-0" #'delete-window)
+
 ;; ----------------------------------------
 ;;                   🥚
 ;; ----------------------------------------
@@ -385,7 +402,7 @@
       `((ui
 	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line)
 	 :theme doom-moonlight
-	 :font ,(font-spec :family "SF Mono" :size 16 :weight 'medium)
+	 :font ,(font-spec :family "SF Mono" :size 16 :weight 'light)
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
 	 :smooth-scroll t
 	 :keys (:treemacs
