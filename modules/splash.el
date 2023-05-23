@@ -31,7 +31,8 @@
     "The only cure for sadness!"
     "Your subscription will expire in 3 days!"
     "Partake in civil disobedience!"
-    "Isn't vim!"))
+    "Isn't vim!"
+    ))
 
 (defvar egg:--splash-image nil)
 
@@ -111,6 +112,9 @@
 (defun egg:--splash-begin-writeout ()
   (setq egg:--splash-writeout-timer (run-with-timer egg:splash-writeout-delay nil #'egg:--splash-writeout-tick)))
 
+(defun egg:--splash-animate-image ()
+  (image-animate egg:--splash-image))
+
 (define-derived-mode egg:splash-mode
   fundamental-mode
   "Splash"
@@ -145,8 +149,8 @@
 				   (if egg:splash-animation-delay
 				       (run-with-timer egg:splash-animation-delay
 						       nil
-						       (lambda () (image-animate egg:--splash-image)))
-				     (image-animate egg:--splash-image))) 0 t)))
+						       #'egg:--splash-animate-image)
+				     (egg:--splash-animate-image))) 0 t)))
 
 (defun egg:make-splash-buffer ()
   (interactive)
