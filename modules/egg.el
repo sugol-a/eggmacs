@@ -46,3 +46,37 @@
 
 (defun egg:module-parameter (module parameter)
   (plist-get (alist-get module egg:modules) parameter))
+
+(defvar egg:stash-alist
+  '()
+  "Attribute list storing stashed values")
+
+(defun egg:stash (id &rest values)
+  (setf
+   (alist-get id egg:stash-alist)
+   (mapcar (lambda (element)
+	     (cond ((consp element) (let ((head (car element))
+					  (tail (cdr element)))
+				      (cond ((functionp head) (cons
+							       'func
+							       (cons head
+								     (if (consp tail)
+									 tail
+								       (symbol-value tail)))))
+					    (t (cons 'symbol-value (cons head (symbol-value tail)))))))
+		   ((symbolp element) (cons 'symbol-value (cons element (symbol-value element))))
+		   (t nil)))
+	   values)))
+
+(defun egg:unstash (id &optional no-kill)
+  (dolist (element (alist-get id egg:stash-alist))
+    (let ((type (car element))
+	  (symbol (cadr element))
+	  (value (cddr element)))
+      (cond ((eq type 'symbol-value) (set symbol value))
+	    ((eq type 'func) (if (consp value)
+				 (apply symbol value)
+			       (funcall symbol value)))
+	    (t nil))))
+  (unless no-kill
+    (setf (alist-get id egg:stash-alist) nil)))
