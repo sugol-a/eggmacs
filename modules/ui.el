@@ -1,8 +1,7 @@
 (egg:module! ui
-
   (setq frame-title-format '(multiple-frames "%b"
-					    ("" "%b - Eggmacs @ " system-name)))
-  
+					     ("" "%b - Eggmacs @ " system-name)))
+
   (egg:feature-gate! +vertico
     (egg:package! vertico
       :init (vertico-mode))
@@ -46,9 +45,26 @@
 	(:delay . which-key-idle-delay))))
 
   (egg:feature-gate! +mood-line
+    ;; (defun egg:--mood-line-better-format (left right)
+    ;;   (let ((reserve-right (length right))
+    ;; 	    (reserve-left (length left)))
+    ;; 	(concat (propertize " "
+    ;; 			    'display
+    ;; 			    `((space :align-to (- left left-margin))))
+    ;; 		left
+    ;; 		" "
+    ;; 		(propertize " "
+    ;; 			    'display
+    ;; 			    `((space :align-to (- right
+    ;; 						  (- 0 right-margin)
+    ;; 						  ,reserve))))
+    ;; 		right)))
+    
     (egg:package! mood-line
       :config
-      (mood-line-mode)))
+      (mood-line-mode)
+      ;; (advice-add #'mood-line--format :override #'egg:--mood-line-better-format)
+      ))
 
   (egg:with-parameter! theme
     (load-theme theme t))

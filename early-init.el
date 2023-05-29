@@ -56,6 +56,52 @@
       host-thunk
     default))
 
+(defmacro egg:define-keys! (keymaps &rest key-groups)
+  "I think I had a stroke."
+  (declare (indent 1))
+  (cons 'progn
+	(cons
+	 (cons 'progn
+	       (mapcar (lambda (keymap)
+			 (let ((keymap-symbol (car keymap))
+			       (keymap-description (cdr keymap)))
+			   `(defvar ,keymap-symbol (make-sparse-keymap) ,keymap-description)))
+		       keymaps))
+	 (mapcar
+	  (lambda (group)
+	    (let ((group-head (car group))
+		  (group-bindings (cdr group)))
+	      (cons 'progn
+		    (cond ((eq :global group-head)
+			   (mapcar (lambda (binding)
+				     (let ((key (car binding))
+					   (definition (cdr binding)))
+				       `(keymap-global-set ,key ,definition)))
+				   group-bindings))
+			  ((eq :hook group-head)
+			   (let* ((hook (car group-bindings))
+				  (group-bindings (cdr group-bindings)))
+			     `((add-hook ',hook (lambda ()
+						  ,@(mapcar (lambda (binding)
+							      (let ((key (car binding))
+								    (definition (cdr binding)))
+								`(keymap-local-set ,key ,definition)))
+							    group-bindings))))))
+			  ((eq :keymap group-head)
+			   (let ((keymap (car group-bindings))
+				 (group-bindings (cdr group-bindings)))
+			     (mapcar (lambda (binding)
+				       (let ((key (car binding))
+					     (definition (cdr binding)))
+					 `(keymap-set ,keymap ,key ,definition)))
+				     group-bindings)))
+			  (t nil)))))
+	  key-groups))))
+
+(defmacro egg:interactive! (args &rest body)
+  (declare (indent 1))
+  `(lambda ,args (interactive) ,@body))
+
 (defun egg:init ()
   (cl-loop for module in (cons 'egg egg:modules) ; Always load the main module
 	   collect (let ((module-symbol (if (consp module)

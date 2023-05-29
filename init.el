@@ -92,9 +92,10 @@
   
   :hook t)
 
-(egg:extend-mode! emacs-lisp-mode
+(egg:extend-mode! emacs-lisp-mode-hook
   (progn
-    (company-mode)))
+    (company-mode))
+  :hook t)
 
 (defun al:typescript-indent-setup ()
   (indent-tabs-mode -1)
@@ -296,8 +297,6 @@
 
       (egg:unstash 'al:glasses))))
 
-(keymap-global-set "C-c h z" #'al:glasses-mode)
-
 (global-hl-line-mode 1)
 
 ;; ----------------------------------------
@@ -331,8 +330,6 @@
     (when kill-ring
       (setq kill-ring (cdr kill-ring)))))
 
-(keymap-global-set "C-c d" #'al:duplicate-line)
-
 (defun al:move-line-up ()
   (interactive)
   (let* ((line-extents (al:line-extents))
@@ -365,19 +362,11 @@
     (when kill-ring
       (setq kill-ring (cdr kill-ring)))))
 
-(keymap-global-set "M-<up>" #'al:move-line-up)
-(keymap-global-set "M-<down>" #'al:move-line-down)
-
 (egg:package! orderless
   :init
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
-
-(keymap-global-set "M-o" #'other-window)
-(keymap-global-set "M-2" #'split-window-below)
-(keymap-global-set "M-3" #'split-window-right)
-(keymap-global-set "M-0" #'delete-window)
 
 (global-subword-mode 1)
 
@@ -389,14 +378,32 @@
                                 (keymap-global-set "<home>" #'egg:beginning-of-line-or-text)
 				(add-to-list 'default-frame-alist '(fullscreen . fullscreen))))))
 
-(keymap-global-set "M-o" #'other-window)
-(keymap-global-set "M-2" #'split-window-vertically)
-(keymap-global-set "M-3" #'split-window-horizontally)
-(keymap-global-set "M-0" #'delete-window)
-
 ;; ----------------------------------------
 ;;                   🥚
 ;; ----------------------------------------
+
+(egg:define-keys! ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer"))
+  (:global
+   ("M-o" . #'other-window)
+   ("M-2" . #'split-window-vertically)
+   ("M-3" . #'mouse-split-window-horizontally)
+   ("M-0" . #'delete-window))
+
+  (:global
+   ("M-<up>" . #'al:move-line-up)
+   ("M-<down>" . #'al:move-line-down)
+   ("C-c d" . #'al:duplicate-line))
+
+  (:global
+   ("C-c C-SPC" . #'treemacs)
+   ("C-c o p" . #'treemacs-select-window))
+
+  (:global
+   ("C-c h" . al:æsthetic-map))
+
+  (:keymap
+   al:æsthetic-map
+   ("z" . #'al:glasses-mode)))
 
 (setq egg:modules
       `((ui
@@ -406,7 +413,7 @@
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
 	 :smooth-scroll t
 	 :keys (:treemacs
-		(("C-c C-SPC" . treemacs)
+		(;; ("C-c C-SPC" . treemacs)
 		 ("C-c o p" . treemacs-select-window)))
 
 	 :zoom (:size (0.66 . 0.66))
@@ -460,4 +467,3 @@
 	(splash :animation-delay 0.8)))
 
 (egg:init)
-(put 'list-timers 'disabled nil)
