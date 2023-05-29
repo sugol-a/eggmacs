@@ -50,11 +50,21 @@
 			    (when (eq major-mode (quote ,mode))
 			      (,minor-mode-symbol 1))))))))
 
-(defmacro egg:machines! (body &optional default)
+(defvar egg:--machine-local-vars nil
+  "Configuration for this specific machine")
+
+(defmacro egg:define-machines! (&rest machines)
+  (cons 'progn
+	(when-let ((machine-config (alist-get (system-name) machines nil nil #'string=)))
+	  (cons
+	   (let ((machine-vars (plist-get machine-config :vars)))
+	     `(setq egg:--machine-local-vars ,machine-vars))
+	   (when-let ((init (plist-get machine-config :init)))
+	     (list init))))))
+
+(defmacro egg:machine-var! (property)
   (declare (indent 1))
-  (if-let ((host-thunk (alist-get system-name body nil nil #'string=)))
-      host-thunk
-    default))
+  `(plist-get egg:--machine-local-vars ,property))
 
 (defmacro egg:define-keys! (keymaps &rest key-groups)
   "I think I had a stroke."

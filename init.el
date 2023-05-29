@@ -370,17 +370,26 @@
 
 (global-subword-mode 1)
 
-(egg:machines!
- (("Alisters-iMac.local" . (progn
-				(setq ns-command-modifier 'meta
-				      ns-alternate-modifier 'super)
-                                (keymap-global-set "<end>" #'move-end-of-line)
-                                (keymap-global-set "<home>" #'egg:beginning-of-line-or-text)
-				(add-to-list 'default-frame-alist '(fullscreen . fullscreen))))))
-
 ;; ----------------------------------------
 ;;                   🥚
 ;; ----------------------------------------
+
+(egg:define-machines!
+ ("Alisters-iMac.local" .
+  (:init
+   (progn
+     (setq ns-command-modifier 'meta
+	   ns-alternate-modifier 'super)
+     (keymap-global-set "<end>" #'move-end-of-line)
+     (keymap-global-set "<home>" #'egg:beginning-of-line-or-text)
+     (add-to-list 'default-frame-alist '(fullscreen . fullscreen)))
+   :vars
+   `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'light))))
+
+ ("kronos" .
+  (:init nil
+   :vars
+   `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'normal)))))
 
 (egg:define-keys! ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer"))
   (:global
@@ -409,7 +418,7 @@
       `((ui
 	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line)
 	 :theme doom-moonlight
-	 :font ,(font-spec :family "SF Mono" :size 16 :weight 'light)
+	 :font ,(egg:machine-var! :font)
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
 	 :smooth-scroll t
 	 :keys (:treemacs
