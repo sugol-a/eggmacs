@@ -22,6 +22,13 @@
       (beginning-of-line-text)
       (when (= current-position (point))
 	(beginning-of-line))))
+
+  (defun egg:delete-to-end-of-previous-line ()
+    (interactive)
+    (let* ((pos (point)))
+      (beginning-of-line)
+      (delete-char (- pos (point)))
+      (backward-delete-char 1)))
   
   (egg:feature-gate! +bol-or-text
     (keymap-global-set "C-a" #'egg:beginning-of-line-or-text))

@@ -65,13 +65,6 @@
 	 (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
   :hook t)
 
-(egg:extend-mode! lsp-mode-hook
-  (keymap-local-set "C-c l" (define-keymap
-			      "r" #'lsp-rename
-			      "f" #'lsp-format-buffer
-			      "a" #'lsp-execute-code-action))
-  :hook t)
-
 (egg:package! svelte-mode)
 
 (egg:package! lice
@@ -247,56 +240,6 @@
 
 (setq frame-resize-pixelwise t)
 
-(defvar al:glasses-fringe-width 340
-  "Fringe width (pixels) to add when al:glasses-mode is enabled.")
-
-(defvar al:glasses-text-scale 0.8
-  "Amount to scale text by when al:glasses-mode is enabled.")
-
-(defvar al:glasses-line-spacing 0.1
-  "Line spacing when al:glasses-mode is enabled.")
-
-(defvar al:glasses-display-line-numbers nil
-  "Set to non-nil to enable line numbers in al:glasses-mode, nil otherwise")
-
-(defvar al:glasses-truncate-lines t
-  "Set to non-nil to enable line truncation in al:glasses-mode, nil otherwise")
-
-(defvar al:glasses-center-point t
-  "Set to non-nil to keep point centered at all times when al:glasses-mode is enabled.")
-
-(define-minor-mode al:glasses-mode
-  "Glasses."
-  :init-value nil
-  :lighter "👓"
-  (let ((inhibit-message t))
-    (if al:glasses-mode
-	(progn
-	  (egg:stash 'al:glasses
-		     `(set-window-fringes . ,(cons nil (window-fringes)))
-		     `(text-scale-set . ,(list text-scale-mode-amount))
-		     `(set-window-configuration . ,(list (current-window-configuration)))
-		     `(toggle-truncate-lines . ,(list truncate-lines))
-		     'line-spacing
-		     'display-line-numbers
-		     'scroll-margin
-		     'maximum-scroll-margin
-		     'mode-line-format)
-	  (set-window-fringes nil
-			      al:glasses-fringe-width
-			      al:glasses-fringe-width)
-	  (text-scale-set al:glasses-text-scale)
-	  (delete-other-windows)
-	  (toggle-truncate-lines al:glasses-truncate-lines)
-	  (setq display-line-numbers al:glasses-display-line-numbers
-		line-spacing al:glasses-line-spacing)
-
-	  (when al:glasses-center-point
-	    (setq-local scroll-margin most-positive-fixnum
-			maximum-scroll-margin 0.5)))
-
-      (egg:unstash 'al:glasses))))
-
 (global-hl-line-mode 1)
 
 ;; ----------------------------------------
@@ -380,9 +323,14 @@
    (progn
      (setq ns-command-modifier 'meta
 	   ns-alternate-modifier 'super)
-     (keymap-global-set "<end>" #'move-end-of-line)
-     (keymap-global-set "<home>" #'egg:beginning-of-line-or-text)
-     (add-to-list 'default-frame-alist '(fullscreen . fullscreen)))
+
+     (egg:define-keys! ()
+       (:global
+	("<end>" . #'move-end-of-line)
+	("<home>" . #'egg:beginning-of-line-or-text)))
+     
+     ;; (add-to-list 'default-frame-alist '(fullscreen . fullscreen))
+     )
    :vars
    `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'light))))
 
@@ -391,7 +339,9 @@
    :vars
    `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'normal)))))
 
-(egg:define-keys! ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer"))
+(egg:define-keys!
+    ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer")
+     (al:lsp-map . "LSP Commands"))
   (:global
    ("M-o" . #'other-window)
    ("M-2" . #'split-window-vertically)
@@ -404,15 +354,29 @@
    ("C-c d" . #'al:duplicate-line))
 
   (:global
+   ("C-c DEL" . #'egg:delete-to-end-of-previous-line))
+
+  (:global
    ("C-c C-SPC" . #'treemacs)
    ("C-c o p" . #'treemacs-select-window))
+
+  (:hook
+   lsp-mode-hook
+   ("C-c l" . al:lsp-map))
+
+  (:keymap
+   al:lsp-map
+   ("r" . #'lsp-rename)
+   ("f" . #'lsp-format-buffer)
+   ("a" . #'lsp-execute-code-action))
 
   (:global
    ("C-c h" . al:æsthetic-map))
 
   (:keymap
    al:æsthetic-map
-   ("z" . #'al:glasses-mode)))
+   ("z" . #'egg:glasses-mode)
+   ("f" . #'toggle-frame-fullscreen)))
 
 (setq egg:modules
       `((ui
@@ -473,6 +437,8 @@
 				  ("\\.hpp$" . al:auto-insert-header-c++)
 				  ("^meson\\.build" . al:auto-insert-meson)
 				  ("^main\\.rs" . al:auto-insert-main-rust))))
-	(splash :animation-delay 0.8)))
+
+	(splash :animation-delay 0.8)
+	(glasses)))
 
 (egg:init)
