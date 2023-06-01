@@ -75,13 +75,12 @@
 
 (setq js-jsx-syntax t)
 
-(egg:extend-mode! js-mode-hook
+(egg:extend-mode! js-ts-mode-hook
   (progn
     (indent-tabs-mode -1)
     (setq-local tab-width 2
 		js-indent-level 2
-		js-switch-indent-offset 2)
-    (keymap-local-set "M-." #'lsp-find-definition))
+		js-switch-indent-offset 2))
   
   :hook t)
 
@@ -364,6 +363,10 @@
    lsp-mode-hook
    ("C-c l" . al:lsp-map))
 
+  (:hook
+   lsp-mode-hook
+   ("M-." . #'lsp-find-definition))
+
   (:keymap
    al:lsp-map
    ("r" . #'lsp-rename)
@@ -408,7 +411,7 @@
 		    +typescript)
 	 :keys (:projectile
 		(("C-c p" . projectile-command-map)))
-	 :lsp (:hooks (c-mode-hook python-mode-hook js-mode-hook jsx-mode-hook c++-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
+	 :lsp (:hooks (c-mode-hook python-mode-hook js-mode-hook js-ts-mode-hook jsx-mode-hook c++-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook))
 	 :lsp-ui (:disable-features (doc-hover-mouse))
 	 :company (:delay 0.1 :min-prefix 2))
 
