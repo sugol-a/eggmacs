@@ -110,4 +110,8 @@
   (egg:feature-gate! '(+python +pyright +lsp)
     (egg:package! lsp-pyright
       :hook (python-mode . (lambda ()
-			     (require 'lsp-pyright))))))
+			     (require 'lsp-pyright)))))
+
+  (egg:feature-gate! +rainbow-delim
+    (egg:package! rainbow-delimiters
+      :hook (prog-mode . #'rainbow-delimiters-mode))))

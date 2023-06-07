@@ -399,6 +399,7 @@
 	 :features (+projectile
 		    +company
 		    +flycheck
+		    +rainbow-delim
 		    +lsp
 		    +lsp-ui
 		    +treesit
