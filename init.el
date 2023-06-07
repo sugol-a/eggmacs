@@ -344,7 +344,7 @@
   (:global
    ("M-o" . #'other-window)
    ("M-2" . #'split-window-vertically)
-   ("M-3" . #'mouse-split-window-horizontally)
+   ("M-3" . #'split-window-horizontally)
    ("M-0" . #'delete-window))
 
   (:global
