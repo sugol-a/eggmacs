@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: category
+# key: category
+# --
+<record model="ir.module.category" id="${1:category_id}">
+  <field name="name">${2:Category Name}</field>
+</record>

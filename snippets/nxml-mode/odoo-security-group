@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: group
+# key: group
+# --
+<record id="group_${1:id}" model="res.groups">
+  <field name="name">${2:Group Name}</field>
+  <field name="category_id" ref="${2:category_id}" />
+</record>

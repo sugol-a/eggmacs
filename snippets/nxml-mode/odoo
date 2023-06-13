@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: odoo
+# key: odoo
+# --
+<odoo>
+  $0
+</odoo>
