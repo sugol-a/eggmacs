@@ -84,10 +84,10 @@
   
   :hook t)
 
-(egg:extend-mode! emacs-lisp-mode-hook
-  (progn
-    (company-mode))
-  :hook t)
+;; (egg:extend-mode! emacs-lisp-mode-hook
+;;   (progn
+;;     (company-mode))
+;;   :hook t)
 
 (defun al:typescript-indent-setup ()
   (indent-tabs-mode -1)
@@ -331,12 +331,18 @@
      ;; (add-to-list 'default-frame-alist '(fullscreen . fullscreen))
      )
    :vars
-   `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'light))))
+   `(:font
+     ,(font-spec :family "SF Mono" :size 16 :weight 'light)
+     :variable-pitch-font
+     ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light))))
 
  ("kronos" .
   (:init nil
    :vars
-   `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'normal)))))
+   `(:font
+     ,(font-spec :family "SF Mono" :size 16 :weight 'normal)
+     :variable-pitch-font
+     ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)))))
 
 (egg:define-keys!
     ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer")
@@ -383,7 +389,7 @@
 
 (setq egg:modules
       `((ui
-	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line)
+	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line +workspace)
 	 :theme doom-moonlight
 	 :font ,(egg:machine-var! :font)
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
@@ -393,13 +399,14 @@
 		 ("C-c o p" . treemacs-select-window)))
 
 	 :zoom (:size (0.66 . 0.66))
-	 :which-key (:delay 0.1))
-	
+	 :which-key (:delay 0.1)
+	 :workspace (:autokill-buffer kill-weak))
+
 	(dev
 	 :features (+projectile
 		    +company
 		    +flycheck
-		    +rainbow-delim
+		    ;; +rainbow-delim
 		    +lsp
 		    +lsp-ui
 		    +treesit

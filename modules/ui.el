@@ -66,6 +66,12 @@
       ;; (advice-add #'mood-line--format :override #'egg:--mood-line-better-format)
       ))
 
+  (egg:feature-gate! +workspace
+    (egg:package! persp-mode
+      :config
+      (egg:bind-parameters! workspace
+	(:autokill-buffer . persp-autokill-buffer-on-remove))))
+
   (egg:with-parameter! theme
     (load-theme theme t))
 
