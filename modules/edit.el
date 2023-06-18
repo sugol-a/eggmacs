@@ -54,8 +54,9 @@
 
   (egg:feature-gate! +snippet
     (egg:package! yasnippet
-      :init (yas-global-mode +1))
-    (egg:package! yasnippet-snippets))
+      :config (add-hook 'prog-mode-hook #'yas-minor-mode-on))
+    (egg:package! yasnippet-snippets
+      :defer t))
 
   (egg:feature-gate! +focus
     (egg:package! focus))

@@ -5,6 +5,11 @@
       custom-file "/dev/null"
       backup-inhibited t)
 
+(egg:package! benchmark-init
+  :ensure t
+  :config
+  (add-hook 'after-init-hook #'benchmark-init/deactivate))
+
 ;; ----------------------------------------
 ;;          d e v e l o p m e n t
 ;; ----------------------------------------
@@ -13,6 +18,74 @@
 	 (keymap-local-set "C-c M-q" #'al:reflow-line)
 	 (display-line-numbers-mode +1))
   :hook t)
+
+(setq lsp-keymap-prefix "C-c l")
+
+(defun al:--iimage-insert (filename)
+  (interactive)
+  (let ((filename (file-relative-name (expand-file-name filename))))
+    (if (egg:inside-comment-p)
+	(insert (format "<%s>" filename)))
+      (indent-according-to-mode)
+      (insert
+       (comment-padright
+	comment-start)
+       (format "<%s>" filename))
+      (save-excursion
+	(unless (string= "" comment-end)
+	  (insert (comment-padleft comment-end)))))
+    (al:iimage-redisplay))
+
+(defun al:iimage-insert ()
+  (interactive)
+  (when-let* ((image-filename (read-file-name "Insert image ")))
+    (al:--iimage-insert image-filename)))
+
+(defvar al:iimage-edit-command #'al:iimage-edit-krita-flatpak)
+
+(defun al:iimage-edit-krita-flatpak (image-filename)
+  (eq 0 (call-process "flatpak"
+		      nil
+		      nil
+		      nil
+		      "run"
+		      "org.kde.krita"
+		      "--canvasonly"
+		      "--nosplash"
+		      image-filename)))
+
+(defun al:--iimage-make-canvas (scratch-filename)
+  (when-let ((size (read-from-minibuffer "Size? ")))
+    (let ((background (car (alist-get 'bg doom-themes--colors))))
+      (call-process "convert"
+		    nil
+		    nil
+		    nil
+		    "-size"
+		    size
+		    (format "xc:%s" background)
+		    scratch-filename))
+    t))
+
+(defun al:iimage-redisplay ()
+  (interactive)
+  (iimage-mode-buffer nil)
+  (iimage-mode-buffer t))
+
+(defun al:iimage-create-and-insert ()
+  (interactive)
+  (let ((image-scratch-filename (expand-file-name
+				 (concat (make-temp-name "eggmacs-scratch-") ".png")
+				 user-emacs-directory)))
+      (when (al:--iimage-make-canvas image-scratch-filename)
+	(funcall al:iimage-edit-command image-scratch-filename)
+	(if-let ((save-filename (read-file-name "Save to ")))
+	    (progn
+	      (rename-file image-scratch-filename save-filename 1)
+	      (when (yes-or-no-p "Insert file? ")
+		(message "Inserting %s" save-filename)
+		(al:--iimage-insert save-filename)))
+	  (delete-file image-scratch-filename)))))
 
 (defun al:c-insert-doc-comment ()
   (interactive)
@@ -63,6 +136,11 @@
 	 (indent-tabs-mode -1)
 	   
 	 (keymap-local-set "C-c M-;" #'al:c-insert-doc-comment))
+  :hook t)
+
+(egg:extend-mode! prog-mode-hook
+  (progn
+    (iimage-mode +1))
   :hook t)
 
 (egg:package! svelte-mode)
@@ -170,25 +248,26 @@
 
 (egg:extend-mode! org-mode
   (progn
-    (setq-local org-hide-emphasis-markers t
-		fill-column 80
-		face-remapping-alist (let* ((background (face-attribute 'default :background))
-					    (face `(:inherit al:org-subtle :box (:color ,background :line-width (12 . 12) :style flat))))
-				       `((header-line . ,face)
-					 (mode-line . ,face)
-					 (mode-line-active . ,face))))
+    ;; (setq-local org-hide-emphasis-markers t
+    ;; 		fill-column 80
+    ;; 		face-remapping-alist (let* ((background (face-attribute 'default :background))
+    ;; 					    (face `(:inherit al:org-subtle :box (:color ,background :line-width (12 . 12) :style flat))))
+    ;; 				       `((header-line . ,face)
+    ;; 					 (mode-line . ,face)
+    ;; 					 (mode-line-active . ,face))))
     (org-toggle-pretty-entities)
     (org-indent-mode +1)
-    (al:org-update-header)
-    (al:org-update-mode-line)
+    ;; (al:org-update-header)
+    ;; (al:org-update-mode-line)
     
     (with-silent-modifications
       (org-table-map-tables 'org-table-align t))
 
-    (add-hook 'after-change-functions #'al:org-buffer-change-hook 0 t)
-    (add-hook 'window-configuration-change-hook #'al:org-update-header 0 t)
-    (add-hook 'window-configuration-change-hook #'al:org-update-mode-line 0 t)
-    (add-hook 'after-save-hook #'al:org-update-mode-line)))
+    ;; (add-hook 'after-change-functions #'al:org-buffer-change-hook 0 t)
+    ;; (add-hook 'window-configuration-change-hook #'al:org-update-header 0 t)
+    ;; (add-hook 'window-configuration-change-hook #'al:org-update-mode-line 0 t)
+    ;; (add-hook 'after-save-hook #'al:org-update-mode-line)
+    ))
 
 (egg:package! org-fragtog
   :defer t
@@ -399,7 +478,7 @@
 	 :features (+projectile
 		    +company
 		    +flycheck
-		    +rainbow-delim
+		    ;; +rainbow-delim
 		    +lsp
 		    +lsp-ui
 		    +treesit

@@ -59,17 +59,21 @@
 	(:min-prefix . company-minimum-prefix-length))))
 
   (egg:feature-gate! +flycheck
-    (egg:package! flycheck))
+    (egg:package! flycheck
+      :defer t))
   
   (egg:feature-gate! +lsp
-    (egg:package! lsp-mode)
+    (egg:package! lsp-mode
+      :commands (lsp-mode)
+      :defer t)
 
     (egg:with-parameter! lsp
       (dolist (hook (plist-get lsp :hooks))
 	(add-hook hook #'lsp-mode))))
   
   (egg:feature-gate! '(+lsp +lsp-ui)
-    (egg:package! lsp-ui)
+    (egg:package! lsp-ui
+      :defer t)
 
     (egg:with-parameter! lsp-ui
       (dolist (feature (plist-get lsp-ui :disable-features))
@@ -84,7 +88,8 @@
       :config (global-treesit-auto-mode)))
 
   (egg:feature-gate! +rust
-    (egg:package! rustic))
+    (egg:package! rustic
+      :defer t))
 
   (egg:feature-gate! +typescript
     (push '(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src" nil nil)
@@ -95,23 +100,27 @@
     (add-to-list 'auto-mode-alist '("\\.tsx?" . typescript-ts-mode)))
 
   (egg:feature-gate! +meson
-    (egg:package! meson-mode))
+    (egg:package! meson-mode
+      :defer t))
 
   (egg:feature-gate! '(+python +pipenv)
     (egg:package! pipenv
       :hook (python-mode . pipenv-mode)
-      :init (setq pipenv-projectile-after-switch-function #'pipenv-projectile-after-switch-extended)))
+      :init (setq pipenv-projectile-after-switch-function #'pipenv-projectile-after-switch-extended)
+      :defer t))
 
   (egg:feature-gate! '(+python +pyvenv)
     (egg:package! pyvenv
-      :ensure t
-      :init (setenv "WORKON_HOME" "~/.local/share/virtualenvs")))
+      :init (setenv "WORKON_HOME" "~/.local/share/virtualenvs")
+      :defer t))
 
   (egg:feature-gate! '(+python +pyright +lsp)
     (egg:package! lsp-pyright
       :hook (python-mode . (lambda ()
-			     (require 'lsp-pyright)))))
+			     (require 'lsp-pyright)))
+      :defer t))
 
   (egg:feature-gate! +rainbow-delim
     (egg:package! rainbow-delimiters
-      :hook (prog-mode . #'rainbow-delimiters-mode))))
+      :hook (prog-mode . #'rainbow-delimiters-mode)
+      :defer t)))
