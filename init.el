@@ -402,6 +402,8 @@
      (setq ns-command-modifier 'meta
 	   ns-alternate-modifier 'super)
 
+     (setq lsp-clients-clangd-executable "/usr/local/Cellar/llvm/16.0.6/bin/clangd")
+
      (egg:define-keys! ()
        (:global
 	("<end>" . #'move-end-of-line)
