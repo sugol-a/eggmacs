@@ -304,6 +304,8 @@
   :config (setq doom-themes-enable-bold t
 		doom-themes-enable-italic t))
 
+(egg:package! base16-theme)
+
 (defvar al:mode-line-padding '(1 . 8))
 
 (defun al:configure-mode-line ()
@@ -414,6 +416,23 @@
    :vars
    `(:font ,(font-spec :family "SF Mono" :size 16 :weight 'light))))
 
+ ("Alisters-MacBook-Pro.local" .
+  (:init
+   (progn
+     (setq ns-command-modifier 'meta
+	   ns-alternate-modifier 'super)
+
+     (setq lsp-clients-clangd-executable "/usr/local/Cellar/llvm/16.0.6/bin/clangd")
+
+     (egg:define-keys! ()
+       (:global
+	("<end>" . #'move-end-of-line)
+	("<home>" . #'egg:beginning-of-line-or-text)))
+     
+     (add-to-list 'default-frame-alist '(fullscreen . fullscreen)))
+   :vars
+   `(:font ,(font-spec :family "Space Mono" :size 16 :weight 'light))))
+
  ("kronos" .
   (:init nil
    :vars
@@ -465,7 +484,7 @@
 (setq egg:modules
       `((ui
 	 :features (+vertico +marginalia +treemacs +popwin +zoom +which-key +mood-line)
-	 :theme doom-moonlight
+	 :theme base16-black-metal-bathory
 	 :font ,(egg:machine-var! :font)
 	 :variable-pitch-font ,(font-spec :family "IBM Plex Sans" :size 16 :weight 'light)
 	 :smooth-scroll t
