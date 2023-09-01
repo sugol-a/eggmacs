@@ -3,7 +3,8 @@
 (setq user-full-name "Alister Sanders"
       user-mail-address "alister@sugol.org"
       custom-file "/dev/null"
-      backup-inhibited t)
+      backup-inhibited t
+      read-process-output-max (* 64 4096))
 
 (egg:package! benchmark-init
   :ensure t
@@ -143,6 +144,8 @@
     (iimage-mode +1))
   :hook t)
 
+;; svelte-mode uses stupid non-treesitter typescript mode
+(egg:package! typescript-mode)
 (egg:package! svelte-mode)
 
 (egg:package! lice
@@ -162,10 +165,10 @@
   
   :hook t)
 
-(egg:extend-mode! emacs-lisp-mode-hook
-  (progn
-    (company-mode))
-  :hook t)
+;;(egg:extend-mode! emacs-lisp-mode-hook
+;;  (progn
+;;    (company-mode))
+;;  :hook t)
 
 (defun al:typescript-indent-setup ()
   (indent-tabs-mode -1)
@@ -442,7 +445,7 @@
     ((al:æsthetic-map . "Commands that vaguely change the look of a frame/window/buffer")
      (al:lsp-map . "LSP Commands"))
   (:global
-   ("M-o" . #'other-window)
+   ("M-o" . #'ace-window)
    ("M-2" . #'split-window-vertically)
    ("M-3" . #'split-window-horizontally)
    ("M-0" . #'delete-window))
@@ -546,3 +549,4 @@
 	(glasses)))
 
 (egg:init)
+(put 'narrow-to-region 'disabled nil)
