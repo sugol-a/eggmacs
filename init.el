@@ -307,7 +307,9 @@
   :config (setq doom-themes-enable-bold t
 		doom-themes-enable-italic t))
 
-(egg:package! base16-theme)
+(egg:package! base16-theme
+  :config
+  (setq base16-theme-distinct-fringe-background nil))
 
 (defvar al:mode-line-padding '(1 . 8))
 
@@ -426,6 +428,8 @@
 	   ns-alternate-modifier 'super)
 
      (setq lsp-clients-clangd-executable "/usr/local/Cellar/llvm/16.0.6/bin/clangd")
+
+     (setq egg:splash-image (concat (expand-file-name user-emacs-directory) "/splash/splash.png"))
 
      (egg:define-keys! ()
        (:global
