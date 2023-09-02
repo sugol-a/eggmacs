@@ -40,6 +40,8 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
+(load (file-name-concat user-emacs-directory "modules" "egg") t)
+
 (add-hook 'before-init-hook #'egg:--core/early-straight-setup)
 (add-hook 'after-init-hook #'egg:--core/early-init-cleanup)
 

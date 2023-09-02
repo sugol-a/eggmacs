@@ -2,15 +2,6 @@
 
 (defvar egg:alert-buffer-name "🥚")
 
-(defmacro egg:--format! (format-string args)
-  `(format format-string ,@args))
-
-(defun egg:--log (format-string &rest args)
-  (let ((alert-buffer (get-buffer-create egg:alert-buffer-name)))
-    (end-of-buffer)
-    (insert (egg:--format! format-string args))
-    (newline)))
-
 (defvar egg:--machines
   '((default .
 	     (:init nil :vars nil :id nil :id-function (lambda (&REST _) t)))))
@@ -61,38 +52,94 @@
   "Eggmacs module base directory")
 
 (defvar egg:modules '()
-  "List of loaded modules")
+  "List of modules to load")
 
 (defvar egg:module-defs '()
   "Module definitions")
 
-(defun egg:load-module (module)
-  (message "Loading %s" (symbol-name module))
-  (when (load (file-name-concat egg:module-dir (symbol-name module)))
-    (push module egg:modules)))
+(defun egg:--core/module-id (module)
+  (if (consp module)
+      (car module)
+    module))
 
-(defmacro egg:modules! (&rest modules)
-  `(mapc #'egg:load-module (quote ,modules)))
+(defun egg:--core/load-module (module)
+  (message "Loading %s" (symbol-name (egg:--core/module-id module)))
+  (load
+   (file-name-concat egg:module-dir
+		     (symbol-name
+		      (if (consp module)
+			  (car module)
+			module)))))
+
+(defun egg:--core/load-modules (modules)
+  (mapc #'egg:--core/load-module modules))
+
+(defmacro egg:use-modules! (&rest modules)
+  `(setq egg:modules (append egg:modules (quote ,modules))))
+
+(defmacro egg:use-feature! (module-id &rest features)
+  (let ((module `(assq (quote ,module-id) egg:modules)))
+    `(when ,module (setcdr ,module (append (cdr ,module) (quote ,features))))))
 
 (defmacro egg:defmodule! (module-id &rest body)
   (declare (indent 1))
   `(progn
      (if (alist-get (quote ,module-id) egg:module-defs)
-	 (egg:--log "Module %s has already been defined" (symbol-name (quote ,module-id)))
-       (push (cons ,module-id nil) egg:module-defs)
+	 (message "Module %s has already been defined" (symbol-name (quote ,module-id)))
+       (push (cons (quote ,module-id) '()) egg:module-defs)
        (let ((egg:--current-module (quote ,module-id)))
 	 ,@body))))
 
+(defmacro egg:initmodule! (&rest body)
+  (declare (indent 0))
+  `(add-hook 'after-init-hook
+	     (lambda ()
+	       (let* ((egg:--module (assq egg:--current-module egg:modules))
+		      (egg:--features (when (consp egg:--module)
+					(cdr egg:--module))))
+		 ,@body))))
+
+(defmacro egg:feature! (feature &rest body)
+  (declare (indent 1))
+  `(when (member (quote ,feature) egg:--features)
+     ,@body))
+
 (defmacro egg:defun! (function &rest body)
   (declare (indent 2))
-  `(egg:--define! func ,function (defun ,function ,@body)))
+  `(egg:--define! function ,function (defun ,function ,@body)))
+
+(defmacro egg:defvar! (variable &rest body)
+  (declare (indent 2))
+  `(egg:--define! variable ,variable (defvar ,variable ,@body)))
 
 (defmacro egg:--define! (sym-type sym &rest body)
   (declare (indent 1))
   (let ((module-def '(assq egg:--current-module egg:module-defs)))
     `(progn
-       (setcdr ,module-def (cons (cdr ,module-def) (cons ,sym ,sym-type)))
+       (push (cons (quote ,sym) (quote ,sym-type)) (cdr ,module-def))
        ,@body)))
+
+(defmacro egg:hook! (hook &rest body)
+  (declare (indent 1))
+  `(add-hook (quote ,hook ) (lambda () ,@body)))
+
+(defmacro egg:global-keys! (&rest bindings)
+  (cons 'progn
+	(mapcar
+	 (lambda (binding)
+	   (let ((key (car binding))
+		 (bind (cdr binding)))
+	     (list 'keymap-global-set key bind)))
+	 bindings)))
+
+(defmacro egg:keys! (keymap &rest bindings)
+  (cons 'progn
+	(mapcar
+	 (lambda (binding)
+	   (let ((key (car binding))
+		 (bind (cdr binding)))
+	     (list 'keymap-set keymap key bind)))
+	 bindings)))
 
 (defun egg:init ()
   (let* ((machine (egg:--core/identify-this-machine))
@@ -100,4 +147,5 @@
 	 (machine-config (cdr machine)))
     (setq egg:this-machine machine-id
 	  egg:this-config machine-config)
-    (egg:--core/configure-machine machine-config)))
+    (egg:--core/configure-machine machine-config)
+    (egg:--core/load-modules egg:modules)))
