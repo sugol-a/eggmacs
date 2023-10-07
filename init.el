@@ -6,16 +6,6 @@
       backup-inhibited t
       read-process-output-max (* 128 1024))
 
-(egg:package! benchmark-init
-  :ensure t
-  :config
-  (add-hook 'after-init-hook #'benchmark-init/deactivate))
-
-(egg:package! lice
-  :commands lice
-  :defer t
-  :config (setq lice:default-license "mit"))
-
 (egg:use-modules!
  (ui
   +completion-vertico
@@ -46,6 +36,38 @@
   +lang-typescript
   +lang-meson
   +lang-svelte))
+
+
+(egg:hook! after-init-hook
+  (al:unwave! flycheck-info
+              flycheck-error
+              flycheck-warning))
+
+(egg:defmachine! macbook
+  "Alisters-MacBook-Pro.local"
+  :init
+  (progn
+    (egg:use-feature! ui +base16-themes)
+
+    ;; Swap ⌘ and ⌥
+    (setq ns-command-modifier 'meta
+          ns-alternate-modifier 'super)
+
+    (setq egg:ui/theme 'base16-black-metal-bathory
+          egg:ui/font "Space Mono 18"
+          base16-theme-distinct-fringe-background nil)))
+
+(egg:init)
+
+(egg:package! benchmark-init
+  :ensure t
+  :config
+  (add-hook 'after-init-hook #'benchmark-init/deactivate))
+
+(egg:package! lice
+  :commands lice
+  :defer t
+  :config (setq lice:default-license "mit"))
 
 (egg:hook! prog-mode-hook
   (setq display-line-numbers t)
@@ -89,6 +111,29 @@
   (c-set-offset 'inclass #'al/c-lineup)
   (setq c-basic-offset 4))
 
+(defun al:symbol-extents ()
+  (save-excursion
+    (thing-at-point--beginning-of-symbol)
+    (let ((begin (point)))
+      (forward-symbol 1)
+      (cons begin (point)))))
+
+(defun al:xml/make-tag-at-symbol ()
+  (interactive)
+  (save-excursion
+    (let* ((extents (al:symbol-extents))
+           (begin (car extents))
+           (end (cdr extents)))
+      (save-restriction
+        (narrow-to-region begin end)
+        (beginning-of-buffer)
+        (insert "<")
+        (end-of-buffer)
+        (insert ">")))))
+
+(egg:hook! nxml-mode-hook
+  (keymap-local-set "C-c C-c" #'al:xml/make-tag-at-symbol))
+
 (defvar al/frame-keymap
   (define-keymap
     "f" #'toggle-frame-fullscreen
@@ -105,7 +150,6 @@
     "p" #'persp-switch
     "c" #'persp-add-new))
 
-(setq persp-keymap-prefix (kbd "C-c M-p"))
 (setq lsp-keymap-prefix "C-c l")
 
 (egg:global-keys!
@@ -119,7 +163,9 @@
  ("C-=" . #'er/expand-region)
  ("C-c m" . al/multiple-cursors-keymap)
  ("C-x b" . #'persp-switch-to-buffer)
- ("C-c d" . #'duplicate-dwim))
+ ("C-c d" . #'duplicate-dwim)
+ ("C-c M-p" . #'persp-key-map)
+ ("C-a" . #'egg:edit/beginning-of-line-or-text))
 
 (fset #'yes-or-no-p #'y-or-n-p)
 
@@ -134,23 +180,32 @@
         tsx-ts-mode-hook
         svelte-mode-hook))
 
-(egg:hook! after-init-hook
-  (treemacs-project-follow-mode +1))
+(setq-default lsp-ui-doc-show-with-mouse nil
+              lsp-ui-doc-show-with-cursor t)
+
+;; (defun al:unwave-faces (&rest faces)
+;;   (dolist (face faces)
+;;     (set-face-underline face 'line)))
+
+(defmacro al:unwave! (&rest faces)
+  (declare (indent 0))
+  (cons 'progn
+        (mapcar (lambda (face)
+                  `(let ((underline (face-attribute (quote ,face) :underline)))
+                     (set-face-attribute (quote ,face) nil :underline (plist-put underline :style 'line))))
+                faces)))
+
+(with-eval-after-load 'lsp-headerline
+  (al:unwave! lsp-headerline-breadcrumb-symbols-hint-face
+              lsp-headerline-breadcrumb-symbols-info-face
+              lsp-headerline-breadcrumb-symbols-warning-face
+              lsp-headerline-breadcrumb-symbols-error-face
+              lsp-headerline-breadcrumb-path-hint-face
+              lsp-headerline-breadcrumb-path-info-face
+              lsp-headerline-breadcrumb-path-warning-face
+              lsp-headerline-breadcrumb-path-error-face))
+
+
+(treemacs-project-follow-mode +1)
 
 (egg:hook! projectile-find-file-hook (persp-add-or-not-on-find-file))
-
-(egg:defmachine! macbook
-  "Alisters-MacBook-Pro.local"
-  :init
-  (progn
-    (egg:use-feature! ui +base16-themes)
-
-    ;; Swap ⌘ and ⌥
-    (setq ns-command-modifier 'meta
-          ns-alternate-modifier 'super)
-
-    (setq egg:ui/theme 'base16-black-metal-bathory
-          egg:ui/font "Space Mono 18"
-          base16-theme-distinct-fringe-background nil)))
-
-(egg:init)

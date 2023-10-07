@@ -1,23 +1,21 @@
 ;;; -*- lexical-binding: t; -*-
 
 (egg:defmodule! edit
-  (egg:initmodule!
-    (egg:feature! +expand-region
-      (egg:package! expand-region))
+  (egg:feature! +expand-region
+    (egg:package! expand-region))
 
-    (egg:feature! +multiple-cursors
-      (egg:package! multiple-cursors))
+  (egg:feature! +multiple-cursors
+    (egg:package! multiple-cursors))
 
-    (egg:feature! +smartparens
-      (egg:package! smartparens
-        :hook (prog-mode . smartparens-mode)))
+  (egg:feature! +smartparens
+    (egg:package! smartparens
+      :hook (prog-mode . smartparens-mode)))
 
-    (egg:feature! +snippets
-      (egg:package! yasnippet
-	:defer t)
-      (egg:package! yasnippet-snippets
-	:defer t)))
-  
+  (egg:feature! +snippets
+    (egg:package! yasnippet)
+    (egg:package! yasnippet-snippets
+      :defer t))
+
   (egg:defun! egg:edit/beginning-of-line-or-text ()
     (interactive)
     (let ((position (point)))

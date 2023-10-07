@@ -87,17 +87,16 @@
      (if (alist-get (quote ,module-id) egg:module-defs)
 	 (message "Module %s has already been defined" (symbol-name (quote ,module-id)))
        (push (cons (quote ,module-id) '()) egg:module-defs)
-       (let ((egg:--current-module (quote ,module-id)))
+       (let* ((egg:--current-module (quote ,module-id))
+              (egg:--module (assq egg:--current-module egg:modules))
+              (egg:--features (when (consp egg:--module)
+                                (cdr egg:--module))))
 	 ,@body))))
 
 (defmacro egg:initmodule! (&rest body)
   (declare (indent 0))
   `(add-hook 'after-init-hook
-	     (lambda ()
-	       (let* ((egg:--module (assq egg:--current-module egg:modules))
-		      (egg:--features (when (consp egg:--module)
-					(cdr egg:--module))))
-		 ,@body))))
+	     (lambda () ,@body)))
 
 (defmacro egg:feature! (feature &rest body)
   (declare (indent 1))

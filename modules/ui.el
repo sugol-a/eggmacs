@@ -1,69 +1,69 @@
 ;;; -*- lexical-binding: t; -*-
 
 (egg:defmodule! ui
+  (setq frame-title-format '(multiple-frames "%b"
+					     ("" "%b - Eggmacs @ " system-name)))
+
+  (egg:feature! +completion-vertico
+    (egg:package! vertico
+      :init (vertico-mode +1)
+      :straight (:files (:defaults "extensions/*"))))
+
+  (egg:feature! +completion-vertico-posframe
+    (egg:package! vertico-posframe
+      :init (vertico-posframe-mode +1)))
+
+  (egg:feature! +completion-marginalia
+    (egg:package! marginalia
+      :init (marginalia-mode)))
+
+  (egg:feature! +completion-orderless
+    (egg:package! orderless
+      :init (setq completion-styles '(orderless basic)
+		  completion-category-defaults nil
+		  completion-category-overrides '((file (styles partial-completion))))))
+
+  (egg:feature! +completion-savehist
+    (egg:package! savehist
+      :init (savehist-mode)))
+
+  (egg:feature! +treemacs
+    (egg:package! treemacs
+      :commands (treemacs)
+      :defer t))
+
+  (egg:feature! +treemacs-projectile
+    (egg:package! treemacs-projectile
+      :defer t))
+
+  (egg:feature! +treemacs-lsp
+    (egg:package! lsp-treemacs
+      :defer t))
+
+  (egg:feature! +doom-themes
+    (egg:package! doom-themes))
+
+  (egg:feature! +base16-themes
+    (egg:package! base16-theme))
+
+  (egg:package! popwin
+    :init (popwin-mode +1))
+
+  (egg:package! zoom
+    :init (zoom-mode +1))
+
+  (egg:package! which-key
+    :init (which-key-mode +1))
+
+  (egg:package! mood-line
+    :config (mood-line-mode +1))
+
+  (egg:package! ace-window)
+
+  (egg:package! persp-mode
+    :init (persp-mode +1))
+
   (egg:initmodule!
-    (setq frame-title-format '(multiple-frames "%b"
-					       ("" "%b - Eggmacs @ " system-name)))
-
-    (egg:feature! +completion-vertico
-      (egg:package! vertico
-	:init (vertico-mode +1)
-        :straight (:files (:defaults "extensions/*"))))
-
-    (egg:feature! +completion-vertico-posframe
-      (egg:package! vertico-posframe
-        :init (vertico-posframe-mode +1)))
-
-    (egg:feature! +completion-marginalia
-      (egg:package! marginalia
-	:init (marginalia-mode)))
-
-    (egg:feature! +completion-orderless
-      (egg:package! orderless
-	:init (setq completion-styles '(orderless basic)
-		    completion-category-defaults nil
-		    completion-category-overrides '((file (styles partial-completion))))))
-
-    (egg:feature! +completion-savehist
-      (egg:package! savehist
-	:init (savehist-mode)))
-
-    (egg:feature! +treemacs
-      (egg:package! treemacs
-	:commands (treemacs)
-	:defer t))
-
-    (egg:feature! +treemacs-projectile
-      (egg:package! treemacs-projectile
-	:defer t))
-
-    (egg:feature! +treemacs-lsp
-      (egg:package! lsp-treemacs
-	:defer t))
-
-    (egg:feature! +doom-themes
-      (egg:package! doom-themes))
-
-    (egg:feature! +base16-themes
-      (egg:package! base16-theme))
-
-    (egg:package! popwin
-      :init (popwin-mode +1))
-
-    (egg:package! zoom
-      :init (zoom-mode +1))
-
-    (egg:package! which-key
-      :init (which-key-mode +1))
-
-    (egg:package! mood-line
-      :config (mood-line-mode +1))
-
-    (egg:package! ace-window)
-
-    (egg:package! persp-mode
-      :init (persp-mode +1))
-
     (when egg:ui/theme
       (load-theme egg:ui/theme t))
 
@@ -163,7 +163,7 @@
 ;;     ;; 						  (- 0 right-margin)
 ;;     ;; 						  ,reserve))))
 ;;     ;; 		right)))
-    
+
 ;;     (egg:package! mood-line
 ;;       :config
 ;;       (mood-line-mode)

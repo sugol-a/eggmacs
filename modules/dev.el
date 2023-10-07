@@ -17,11 +17,8 @@
 	:defer t))
 
     (egg:feature! +lsp
-      (egg:package! lsp-mode
-	:commands (lsp-mode)
-	:defer t)
-      (egg:package! lsp-ui
-	:defer t)
+      (egg:package! lsp-mode)
+      (egg:package! lsp-ui)
 
       (dolist (hook egg:dev/lsp-mode-hooks)
 	(add-hook hook #'lsp-mode)))
