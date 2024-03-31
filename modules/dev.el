@@ -30,7 +30,7 @@
     (egg:feature! +rainbow-delimiters
       (egg:package! rainbow-delimiters
 	:commands (rainbow-delimiters-mode)
-	:hook (prog-mode . #'rainbow-delimiters-mode)
+	:hook (prog-mode . rainbow-delimiters-mode)
 	:defer t))
 
     (egg:feature! +lang-rust
@@ -57,7 +57,12 @@
     (egg:feature! +lang-python
       (egg:feature! +lsp
         (egg:package! lsp-pyright
-          :defer t))))
+          :defer t)))
+
+    (egg:feature! +lang-xml
+      (egg:feature! +lsp
+        (egg:hook! nxml-mode-hook
+          (lsp)))))
 
   (egg:defvar! egg:dev/lsp-mode-hooks '()
     "Major mode hooks to initialize lsp for")

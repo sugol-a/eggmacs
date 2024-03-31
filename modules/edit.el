@@ -16,6 +16,11 @@
     (egg:package! yasnippet-snippets
       :defer t))
 
+  (egg:feature! +whitespace
+    (egg:package! ws-butler
+      :hook (prog-mode . ws-butler-mode))
+    (setq show-trailing-whitespace t))
+
   (egg:defun! egg:edit/beginning-of-line-or-text ()
     (interactive)
     (let ((position (point)))
