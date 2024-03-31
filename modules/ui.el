@@ -60,8 +60,8 @@
 
   (egg:package! ace-window)
 
-  (egg:package! persp-mode
-    :init (persp-mode +1))
+  ;; (egg:package! persp-mode
+  ;;   :init (persp-mode +1))
 
   (egg:initmodule!
     (when egg:ui/theme

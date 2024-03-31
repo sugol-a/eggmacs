@@ -57,6 +57,31 @@
           egg:ui/font "Space Mono 18"
           base16-theme-distinct-fringe-background nil)))
 
+(egg:defmachine! kronos
+  "kronos"
+  :init
+  (progn
+    (egg:use-feature! ui +base16-themes)
+    (setq egg:ui/theme 'base16-black-metal-bathory
+          egg:ui/font "Space Mono 12"
+          base16-theme-distinct-fringe-background nil)
+
+    (setq lsp-disabled-clients '(ccls))
+    (setq lsp-clangd-binary-path "/usr/bin/clangd")
+    ;; (egg:package! ccls)
+    ))
+
+(egg:defmachine! quark
+  "quark"
+  :init
+  (progn
+    (egg:use-feature! ui +base16-themes)
+    (setq egg:ui/theme 'base16-black-metal-burzum
+          egg:ui/font "IBM Plex Mono 11"
+          base16-theme-distinct-fringe-background nil)
+
+    (setq lsp-clangd-binary-path "/usr/bin/clangd")))
+
 (egg:init)
 
 (egg:package! benchmark-init
@@ -74,8 +99,8 @@
   (indent-tabs-mode -1)
   (yas-minor-mode +1))
 
-(egg:hook! emacs-lisp-mode-hook
-  (company-mode +1))
+;; (egg:hook! emacs-lisp-mode-hook
+;;   (company-mode +1))
 
 (setq js-jsx-syntax t)
 (setq-default display-line-numbers-width 4)
@@ -162,9 +187,9 @@
  ("C-c o p" . #'treemacs)
  ("C-=" . #'er/expand-region)
  ("C-c m" . al/multiple-cursors-keymap)
- ("C-x b" . #'persp-switch-to-buffer)
+ ;; ("C-x b" . #'persp-switch-to-buffer)
  ("C-c d" . #'duplicate-dwim)
- ("C-c M-p" . #'persp-key-map)
+ ;; ("C-c M-p" . #'persp-key-map)
  ("C-a" . #'egg:edit/beginning-of-line-or-text))
 
 (fset #'yes-or-no-p #'y-or-n-p)
