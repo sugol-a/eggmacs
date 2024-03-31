@@ -4,6 +4,30 @@
   (setq frame-title-format '(multiple-frames "%b"
 					     ("" "%b - Eggmacs @ " system-name)))
 
+  (egg:initmodule!
+    (egg:feature! +dashboard
+      (setq dashboard-startup-banner egg:ui/dashboard-banner-path)))
+
+  (egg:feature! +dashboard
+    (defun egg:--dashboard-mode ()
+      (set-face-attribute 'dashboard-text-banner-face nil
+                          :weight 'bold)
+
+      (add-to-list 'window-size-change-functions (lambda ()
+                                                   (when (string= (buffer-name) dashboard-buffer-name)
+                                                     (dashboard-refresh-buffer)))))
+
+    (egg:package! dashboard
+      :init (progn
+              (setq initial-buffer-choice #'dashboard-open)
+              (when (member '+projectile (cdr (assq 'dev egg:modules)))
+                (setq dashboard-projects-backend 'projectile))
+              (setq dashboard-center-content t
+                    dashboard-banner-logo-title "Welcome to Eggmacs"
+                    dashboard-startupify-list '(dashboard-insert-banner dashboard-insert-newline dashboard-insert-banner-title dashboard-insert-newline dashboard-insert-init-info dashboard-insert-items))
+
+              (add-hook 'dashboard-mode-hook #'egg:--dashboard-mode))))
+
   (egg:feature! +completion-vertico
     (egg:package! vertico
       :init (vertico-mode +1)
@@ -60,8 +84,17 @@
 
   (egg:package! ace-window)
 
-  (egg:package! persp-mode
-    :init (persp-mode +1))
+  (egg:feature! +persp
+    (egg:package! persp-mode
+      :init (persp-mode +1)))
+
+  (egg:feature! +org
+    (egg:package! writeroom-mode)
+
+    (defun egg:--org-setup ()
+      (writeroom-mode 1))
+
+    (add-hook 'org-mode-hook #'egg:--org-setup))
 
   (egg:initmodule!
     (when egg:ui/theme
@@ -75,9 +108,7 @@
 	  truncate-lines t
 	  ring-bell-function (lambda () nil))
 
-    (pixel-scroll-precision-mode +1)
-
-    (egg:--ui/configure-mode-line))
+    (pixel-scroll-precision-mode +1))
 
   (egg:defvar! egg:ui/theme nil
     "Theme.")
@@ -87,6 +118,12 @@
 
   (egg:defvar! egg:ui/mode-line-padding '(2 . 8)
     "Mode line padding")
+
+  (egg:defvar! egg:ui/dashboard-banner-path (concat user-emacs-directory "splash/banner.txt")
+    "Dashboard banner path")
+
+  (egg:defvar! egg:ui/variable-pitch-font nil
+    "Variable pitch font")
 
   (egg:defun! egg:--ui/configure-mode-line ()
     (let ((mode-line-bg (face-background 'mode-line))

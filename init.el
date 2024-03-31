@@ -8,6 +8,7 @@
 
 (egg:use-modules!
  (ui
+  +dashboard
   +completion-vertico
   +completion-vertico-posframe
   +completion-marginalia
@@ -15,14 +16,16 @@
   +completion-orderless
 
   +treemacs
-  +treemacs-projectile
-  +treemacs-lsp)
+  ;; +treemacs-projectile
+  +treemacs-lsp
+  +persp)
 
  (edit
   +expand-region
   +multiple-cursors
   +smartparens
-  +snippets)
+  +snippets
+  +whitespace)
 
  (dev
   +projectile
@@ -30,6 +33,7 @@
   +flycheck
   +lsp
   +treesit
+  +rainbow-delimiters
 
   +lang-rust
   +lang-python
@@ -37,6 +41,13 @@
   +lang-meson
   +lang-svelte))
 
+(defmacro al:unwave! (&rest faces)
+  (declare (indent 0))
+  (cons 'progn
+        (mapcar (lambda (face)
+                  `(let ((underline (face-attribute (quote ,face) :underline)))
+                     (set-face-attribute (quote ,face) nil :underline (plist-put underline :style 'line))))
+                faces)))
 
 (egg:hook! after-init-hook
   (al:unwave! flycheck-info
@@ -52,10 +63,20 @@
     ;; Swap ⌘ and ⌥
     (setq ns-command-modifier 'meta
           ns-alternate-modifier 'super)
+ 
+    ;; (setq egg:ui/theme 'base16-black-metal-mayhem
+    ;;       egg:ui/font "Space Mono 18"
+    ;;       base16-theme-distinct-fringe-background nil)
 
-    (setq egg:ui/theme 'base16-black-metal-bathory
-          egg:ui/font "Space Mono 18"
-          base16-theme-distinct-fringe-background nil)))
+    (egg:package! catppuccin-theme)
+    (setq egg:ui/theme 'catppuccin
+          egg:ui/font "Space Mono 16")
+
+    (setq lsp-clangd-binary-path "/opt/homebrew/opt/llvm/bin/clangd"
+          sql-postgres-program "/opt/homebrew/opt/postgresql@15/bin/psql")
+
+    (add-to-list 'exec-path (expand-file-name "~/.cargo/bin"))
+    (add-to-list 'exec-path "/opt/homebrew/bin")))
 
 (egg:init)
 
@@ -74,10 +95,11 @@
   (indent-tabs-mode -1)
   (yas-minor-mode +1))
 
-(egg:hook! emacs-lisp-mode-hook
-  (company-mode +1))
+;; (egg:hook! emacs-lisp-mode-hook
+;;   (company-mode +1))
 
-(setq js-jsx-syntax t)
+;; (push ("\\[jt]sx?" . #'tsx-ts-mode) 'auto-mode-alist)
+
 (setq-default display-line-numbers-width 4)
 
 (setq vertico-posframe-width 120)
@@ -104,12 +126,18 @@
           '+
         '++))))
 
-(egg:hook! c-mode-common-hook
+(defun al/c-setup ()
   (c-set-style "bsd")
   (c-set-offset 'case-label '+)
   (c-set-offset 'access-label '-)
   (c-set-offset 'inclass #'al/c-lineup)
   (setq c-basic-offset 4))
+
+(egg:hook! c-mode-common-hook
+  (al/c-setup))
+
+(egg:hook! c++-mode-hook
+  (al/c-setup))
 
 (defun al:symbol-extents ()
   (save-excursion
@@ -183,17 +211,10 @@
 (setq-default lsp-ui-doc-show-with-mouse nil
               lsp-ui-doc-show-with-cursor t)
 
-;; (defun al:unwave-faces (&rest faces)
-;;   (dolist (face faces)
-;;     (set-face-underline face 'line)))
+(egg:hook! prog-mode-hook (lambda ()
+                            (hl-line-mode)))
 
-(defmacro al:unwave! (&rest faces)
-  (declare (indent 0))
-  (cons 'progn
-        (mapcar (lambda (face)
-                  `(let ((underline (face-attribute (quote ,face) :underline)))
-                     (set-face-attribute (quote ,face) nil :underline (plist-put underline :style 'line))))
-                faces)))
+(setq dashboard-items '((projects . 5) (recents . 5) (bookmarks . 5) (agenda . 5)))
 
 (with-eval-after-load 'lsp-headerline
   (al:unwave! lsp-headerline-breadcrumb-symbols-hint-face
@@ -205,7 +226,9 @@
               lsp-headerline-breadcrumb-path-warning-face
               lsp-headerline-breadcrumb-path-error-face))
 
-
-(treemacs-project-follow-mode +1)
+;; (treemacs-project-follow-mode +1)
+(setq treemacs-file-event-delay 100)
 
 (egg:hook! projectile-find-file-hook (persp-add-or-not-on-find-file))
+(setq persp-auto-resume-time -1         ;Don't autoload buffers
+      persp-set-last-persp-for-new-frames nil)
