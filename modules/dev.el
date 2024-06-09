@@ -67,7 +67,14 @@
     (egg:feature! +lang-xml
       (egg:feature! +lsp
         (egg:hook! nxml-mode-hook
-          (lsp)))))
+          (lsp))))
+
+    (egg:feature! +lang-jsx-tsx
+      (egg:package! jtsx
+        :defer t
+        :mode (("\\.jsx\\'" . jtsx-jsx-mode)
+               ("\\.tsx\\'" . jtsx-tsx-mode)
+               ("\\.ts\\'" . jtsx-typescript-mode)))))
 
   (egg:defvar! egg:dev/lsp-mode-hooks '()
     "Major mode hooks to initialize lsp for")
