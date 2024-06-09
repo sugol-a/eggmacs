@@ -2,9 +2,9 @@
 
 (setq user-full-name "Alister Sanders"
       user-mail-address "alister@sugol.org"
-      custom-file "/dev/null"
+      custom-file (expand-file-name "custom.el" user-emacs-directory)
       backup-inhibited t
-      read-process-output-max (* 128 1024))
+      read-process-output-max (* 256 1024))
 
 (egg:use-modules!
  (ui
@@ -15,12 +15,14 @@
   +completion-savehist
   +completion-orderless
   +consult
-
   +treemacs
-  ;; +treemacs-projectile
   +treemacs-lsp
   ;; +persp
-  )
+  ;; +nerd-icons
+  ;; +persp
+  +solaire
+  +helpful
+  +mood-line)
 
  (edit
   ;; +expand-region
@@ -33,6 +35,7 @@
  (dev
   +projectile
   +company
+  ;; +corfu
   +flycheck
   +lsp
   +treesit
@@ -40,11 +43,16 @@
 
   +lang-rust
   +lang-python
-  +lang-typescript
+  ;; +lang-typescript
+  +lang-jsx-tsx
   +lang-meson
   +lang-svelte
   +lang-php
-  +lang-web))
+  +lang-web
+  +lang-svelte)
+
+ (org
+  +clean))
 
 (defmacro al:unwave! (&rest faces)
   (declare (indent 0))
@@ -59,53 +67,18 @@
               flycheck-error
               flycheck-warning))
 
-(egg:defmachine! macbook
-  "Alisters-MacBook-Pro.local"
-  :init
-  (progn
-    (egg:use-feature! ui +base16-themes)
-
-    ;; Swap ⌘ and ⌥
-    (setq ns-command-modifier 'meta
-          ns-alternate-modifier 'super)
- 
-    ;; (setq egg:ui/theme 'base16-black-metal-mayhem
-    ;;       egg:ui/font "Space Mono 18"
-    ;;       base16-theme-distinct-fringe-background nil)
-
-    (egg:package! catppuccin-theme)
-    (setq egg:ui/theme 'catppuccin
-          egg:ui/font "Space Mono 16")
-
-    (setq lsp-clangd-binary-path "/opt/homebrew/opt/llvm/bin/clangd"
-          sql-postgres-program "/opt/homebrew/opt/postgresql@15/bin/psql")
-
-    (add-to-list 'exec-path (expand-file-name "~/.cargo/bin"))
-    (add-to-list 'exec-path "/opt/homebrew/bin")))
-
-(egg:defmachine! kronos
-  "kronos"
-  :init
-  (progn
-    (egg:use-feature! ui +base16-themes)
-    (setq egg:ui/theme 'base16-black-metal-bathory
-          egg:ui/font "Space Mono 12"
-          base16-theme-distinct-fringe-background nil)
-
-    (setq lsp-disabled-clients '(ccls))
-    (setq lsp-clangd-binary-path "/usr/bin/clangd")
-    ;; (egg:package! ccls)
-    ))
+(egg:package! catppuccin-theme
+  :config (setq catppuccin-enlarge-headings nil))
 
 (egg:defmachine! quark
   "quark"
   :init
   (progn
-    (egg:use-feature! ui +base16-themes)
-    (setq egg:ui/theme 'base16-black-metal-burzum
-          egg:ui/font "IBM Plex Mono 11"
-          base16-theme-distinct-fringe-background nil)
+    (setq catppuccin-flavor 'latte
+          egg:ui/theme 'catppuccin
+          egg:ui/font "Red Hat Mono")
 
+    (set-face-attribute 'italic nil :font "Red Hat Mono:italic")
     (setq lsp-clangd-binary-path "/usr/bin/clangd")))
 
 (egg:defmachine! thinkbook
@@ -118,6 +91,9 @@
           base16-theme-distinct-fringe-background nil)
 
     (setq lsp-clangd-binary-path "/usr/bin/clangd")))
+
+(setq popwin:popup-window-position 'right)
+
 (egg:init)
 
 (egg:package! benchmark-init
@@ -135,9 +111,9 @@
   (indent-tabs-mode -1)
   (yas-minor-mode +1))
 
-;; (egg:hook! emacs-lisp-mode-hook
-;;   (company-mode +1))
-;; (push ("\\[jt]sx?" . #'tsx-ts-mode) 'auto-mode-alist)
+(egg:hook! emacs-lisp-mode-hook
+  (when (boundp #'company-mode)
+    (company-mode +1)))
 
 (setq-default display-line-numbers-width 4)
 
@@ -201,10 +177,17 @@
 (egg:hook! nxml-mode-hook
   (keymap-local-set "C-c C-c" #'al:xml/make-tag-at-symbol))
 
+(defun al/toggle-frame-decorated ()
+  (interactive)
+  (let ((decorated (frame-parameter nil 'undecorated)))
+    (set-frame-parameter nil 'undecorated (not decorated))))
+
+(egg:package! writeroom-mode)
 (defvar al/frame-keymap
   (define-keymap
     "f" #'toggle-frame-fullscreen
-    "z" #'zoom-mode))
+    "z" #'zoom-mode
+    "v" #'al/toggle-frame-decorated))
 
 (defvar al/multiple-cursors-keymap
   (define-keymap
@@ -213,10 +196,10 @@
     "c" #'mc/insert-letters
     ";" #'mc/mark-next-like-this))
 
-(defvar al/persp-mode-keymap
-  (define-keymap
-    "p" #'persp-switch
-    "c" #'persp-add-new))
+;; (defvar al/persp-mode-keymap
+;;   (define-keymap
+;;     "p" #'persp-switch
+;;     "c" #'persp-add-new))
 
 (setq lsp-keymap-prefix "C-c l")
 
@@ -263,6 +246,8 @@
 (setq-default lsp-ui-doc-show-with-mouse nil
               lsp-ui-doc-show-with-cursor t)
 
+(egg:hook! prog-mode-hook (lambda () (hl-line-mode)))
+
 (setq dashboard-items '((projects . 5) (recents . 5) (bookmarks . 5) (agenda . 5)))
 
 (with-eval-after-load 'lsp-headerline
@@ -275,10 +260,9 @@
               lsp-headerline-breadcrumb-path-warning-face
               lsp-headerline-breadcrumb-path-error-face))
 
-;; (treemacs-project-follow-mode +1)
+(treemacs-project-follow-mode +1)
 (setq treemacs-file-event-delay 100)
 
-(egg:hook! projectile-find-file-hook (persp-add-or-not-on-find-file))
 (setq persp-auto-resume-time -1         ;Don't autoload buffers
       persp-set-last-persp-for-new-frames nil)
 
@@ -296,3 +280,21 @@
 
 (egg:hook! php-mode-hook
   (lsp))
+
+;; (egg:hook! projectile-find-file-hook (persp-add-or-not-on-find-file))
+;; (setq persp-auto-resume-time -1         ;Don't autoload buffers
+;;       persp-set-last-persp-for-new-frames nil)
+
+(setq org-babel-load-languages (mapcar
+                                (lambda (lang)
+                                  (cons lang t))
+                                '(emacs-lisp python shell C))
+      org-confirm-babel-evaluate nil)
+
+(egg:hook! org-mode-hook
+  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+  (egg:org-clean-mode 1))
+
+(when (and custom-file
+           (file-exists-p custom-file))
+  (load-file custom-file))

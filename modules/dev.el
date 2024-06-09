@@ -11,6 +11,11 @@
 	:commands (company-mode)
 	:defer t))
 
+    (egg:feature! +corfu
+      (egg:package! corfu
+        :commands (corfu-mode)
+        :defer t))
+
     (egg:feature! +flycheck
       (egg:package! flycheck
 	:commands (flycheck-mode)
@@ -62,7 +67,7 @@
     (egg:feature! +lang-xml
       (egg:feature! +lsp
         (egg:hook! nxml-mode-hook
-          (lsp))))
+          (lsp)))
 
     (egg:feature! +lang-php
       (egg:package! php-mode
@@ -71,6 +76,13 @@
     (egg:feature! +lang-web
       (egg:package! web-mode
         :defer t)))
+
+    (egg:feature! +lang-jsx-tsx
+      (egg:package! jtsx
+        :defer t
+        :mode (("\\.jsx\\'" . jtsx-jsx-mode)
+               ("\\.tsx\\'" . jtsx-tsx-mode)
+               ("\\.ts\\'" . jtsx-typescript-mode)))))
 
   (egg:defvar! egg:dev/lsp-mode-hooks '()
     "Major mode hooks to initialize lsp for")
