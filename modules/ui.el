@@ -51,10 +51,19 @@
     (egg:package! savehist
       :init (savehist-mode)))
 
+  (egg:feature! +nerd-icons
+    (egg:package! nerd-icons))
+
   (egg:feature! +treemacs
     (egg:package! treemacs
       :commands (treemacs)
-      :defer t))
+      :defer t)
+
+    (egg:feature! +nerd-icons
+      (egg:package! treemacs-nerd-icons
+        :defer t
+        :commands (treemacs-load-theme)
+        :config (treemacs-load-theme "nerd-icons"))))
 
   (egg:feature! +treemacs-projectile
     (egg:package! treemacs-projectile
