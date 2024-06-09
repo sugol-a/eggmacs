@@ -88,10 +88,18 @@
   (egg:package! which-key
     :init (which-key-mode +1))
 
-  (egg:package! mood-line
-    :config (mood-line-mode +1))
+  (egg:feature! +mood-line
+    (egg:package! mood-line
+      :config (mood-line-mode +1)))
 
-  (egg:package! ace-window)
+  (egg:feature! +lambda-line
+    (egg:package! lambda-line
+      :straight (:type git :host github :repo "lambda-emacs/lambda-line")
+      :config
+      (lambda-line-mode +1)))
+
+  (egg:package! ace-window
+    :defer t)
 
   (egg:feature! +persp
     (egg:package! persp-mode
