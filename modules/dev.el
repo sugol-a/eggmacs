@@ -11,6 +11,11 @@
 	:commands (company-mode)
 	:defer t))
 
+    (egg:feature! +corfu
+      (egg:package! corfu
+        :commands (corfu-mode)
+        :defer t))
+
     (egg:feature! +flycheck
       (egg:package! flycheck
 	:commands (flycheck-mode)
