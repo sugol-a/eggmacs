@@ -10,18 +10,21 @@
  (ui
   +dashboard
   +completion-vertico
-  +completion-vertico-posframe
+  ;; +completion-vertico-posframe
   +completion-marginalia
   +completion-savehist
   +completion-orderless
+  +consult
 
   +treemacs
   ;; +treemacs-projectile
   +treemacs-lsp
-  +persp)
+  ;; +persp
+  )
 
  (edit
-  +expand-region
+  ;; +expand-region
+  +expreg
   +multiple-cursors
   +smartparens
   +snippets
@@ -39,7 +42,9 @@
   +lang-python
   +lang-typescript
   +lang-meson
-  +lang-svelte))
+  +lang-svelte
+  +lang-php
+  +lang-web))
 
 (defmacro al:unwave! (&rest faces)
   (declare (indent 0))
@@ -103,6 +108,16 @@
 
     (setq lsp-clangd-binary-path "/usr/bin/clangd")))
 
+(egg:defmachine! thinkbook
+  "thinkbookpro"
+  :init
+  (progn
+    (egg:use-feature! ui +base16-themes)
+    (setq egg:ui/theme 'base16-catppuccin-mocha
+          egg:ui/font "IBM Plex Mono 12"
+          base16-theme-distinct-fringe-background nil)
+
+    (setq lsp-clangd-binary-path "/usr/bin/clangd")))
 (egg:init)
 
 (egg:package! benchmark-init
@@ -126,7 +141,7 @@
 
 (setq-default display-line-numbers-width 4)
 
-(setq vertico-posframe-width 120)
+;; (setq vertico-posframe-width 120)
 
 (defun al/setup-js-indent ()
   (setq-local tab-width 2
@@ -195,7 +210,8 @@
   (define-keymap
     "l" #'mc/edit-lines
     "i" #'mc/insert-numbers
-    "c" #'mc/insert-letters))
+    "c" #'mc/insert-letters
+    ";" #'mc/mark-next-like-this))
 
 (defvar al/persp-mode-keymap
   (define-keymap
@@ -212,12 +228,23 @@
  ("M-o" . #'ace-window)
  ("C-c p" . #'projectile-command-map)
  ("C-c o p" . #'treemacs)
- ("C-=" . #'er/expand-region)
+ ("C-=" . #'expreg-expand)
  ("C-c m" . al/multiple-cursors-keymap)
  ;; ("C-x b" . #'persp-switch-to-buffer)
  ("C-c d" . #'duplicate-dwim)
  ;; ("C-c M-p" . #'persp-key-map)
- ("C-a" . #'egg:edit/beginning-of-line-or-text))
+ ("C-a" . #'egg:edit/beginning-of-line-or-text)
+
+ ("C-x b" . #'consult-buffer)
+ ("M-#" . #'consult-register-load)
+ ("M-'" . #'consult-register-store)
+ ("C-M-'" . #'consult-register)
+ ("M-y" . #'consult-yank-pop)
+ ("M-g g" . #'consult-goto-line)
+ ("M-g M-g" . #'consult-goto-line)
+ ("M-g e" . #'consult-compile-error)
+ ("M-s M-s" . #'consult-ripgrep)
+ ("C-s" . #'consult-line))
 
 (fset #'yes-or-no-p #'y-or-n-p)
 
@@ -230,13 +257,11 @@
         js-jsx-mode-hook
         typescript-ts-mode-hook
         tsx-ts-mode-hook
-        svelte-mode-hook))
+        svelte-mode-hook
+        php-mode))
 
 (setq-default lsp-ui-doc-show-with-mouse nil
               lsp-ui-doc-show-with-cursor t)
-
-(egg:hook! prog-mode-hook (lambda ()
-                            (hl-line-mode)))
 
 (setq dashboard-items '((projects . 5) (recents . 5) (bookmarks . 5) (agenda . 5)))
 
@@ -256,3 +281,18 @@
 (egg:hook! projectile-find-file-hook (persp-add-or-not-on-find-file))
 (setq persp-auto-resume-time -1         ;Don't autoload buffers
       persp-set-last-persp-for-new-frames nil)
+
+(egg:package! origami)
+(add-hook 'prog-mode-hook #'origami-mode)
+(keymap-set prog-mode-map "C-c C-SPC" #'origami-toggle-node)
+
+(egg:hook! lsp-mode-hook
+  (keymap-local-set "C-c M-." #'lsp-ui-peek-find-references)
+  (keymap-local-set "M-." #'lsp-ui-peek-find-definitions))
+
+(egg:hook! prog-mode-hook
+  (subword-mode +1)
+  (hl-line-mode))
+
+(egg:hook! php-mode-hook
+  (lsp))

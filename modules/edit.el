@@ -4,6 +4,9 @@
   (egg:feature! +expand-region
     (egg:package! expand-region))
 
+  (egg:feature! +expreg
+    (egg:package! expreg))
+
   (egg:feature! +multiple-cursors
     (egg:package! multiple-cursors))
 

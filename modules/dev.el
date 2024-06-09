@@ -62,7 +62,15 @@
     (egg:feature! +lang-xml
       (egg:feature! +lsp
         (egg:hook! nxml-mode-hook
-          (lsp)))))
+          (lsp))))
+
+    (egg:feature! +lang-php
+      (egg:package! php-mode
+        :defer t))
+
+    (egg:feature! +lang-web
+      (egg:package! web-mode
+        :defer t)))
 
   (egg:defvar! egg:dev/lsp-mode-hooks '()
     "Major mode hooks to initialize lsp for")

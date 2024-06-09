@@ -47,6 +47,9 @@
 		  completion-category-defaults nil
 		  completion-category-overrides '((file (styles partial-completion))))))
 
+  (egg:feature! +consult
+    (egg:package! consult))
+
   (egg:feature! +completion-savehist
     (egg:package! savehist
       :init (savehist-mode)))
