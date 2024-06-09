@@ -103,15 +103,24 @@
 
   (egg:feature! +persp
     (egg:package! persp-mode
-      :init (persp-mode +1)))
+      :init (persp-mode +1)
+      :defer t))
 
-  (egg:feature! +org
-    (egg:package! writeroom-mode)
+  (egg:feature! +solaire
+    (egg:package! solaire-mode
+      :config
+      (egg:feature! +treemacs
+        (push '(treemacs-window-background-face . solaire-default-face) solaire-mode-remap-alist)
+        (push '(treemacs-hl-line-face . solaire-hl-line-face) solaire-mode-remap-alist)
+        (solaire-global-mode +1))))
 
-    (defun egg:--org-setup ()
-      (writeroom-mode 1))
-
-    (add-hook 'org-mode-hook #'egg:--org-setup))
+  (egg:feature! +helpful
+    (egg:package! helpful
+      :config
+      (keymap-global-set "C-h f" #'helpful-function)
+      (keymap-global-set "C-h v" #'helpful-variable)
+      (keymap-global-set "C-h k" #'helpful-key)
+      (keymap-global-set "C-h o" #'helpful-symbol)))
 
   (egg:initmodule!
     (when egg:ui/theme
