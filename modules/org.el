@@ -77,6 +77,7 @@
 
                   (visual-fill-column-mode 1)
                   (visual-line-mode 1)
+                  (org-appear-mode 1)
                   (set-window-buffer nil (window-buffer))
                   (add-hook 'window-configuration-change-hook
                             #'egg:--org-clean-mode-fontify

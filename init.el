@@ -8,6 +8,7 @@
 
 (egg:use-modules!
  (ui
+  +auto-theme
   +dashboard
   +completion-vertico
   ;; +completion-vertico-posframe
@@ -70,15 +71,22 @@
 (egg:package! catppuccin-theme
   :config (setq catppuccin-enlarge-headings nil))
 
+(defun al:map-color-scheme (color-scheme)
+  (if (equal color-scheme 'light)
+      'latte
+    'mocha))
+
+(defun al:load-catppuccin-theme (color-scheme)
+  (catppuccin-load-flavor (al:map-color-scheme color-scheme)))
+
 (egg:defmachine! quark
   "quark"
   :init
   (progn
     (setq catppuccin-flavor 'latte
-          egg:ui/theme 'catppuccin
+          egg:ui/theme #'al:load-catppuccin-theme
           egg:ui/font "Red Hat Mono")
-
-    (set-face-attribute 'italic nil :font "Red Hat Mono:italic")
+    (load-theme 'catppuccin t)
     (setq lsp-clangd-binary-path "/usr/bin/clangd")))
 
 (egg:defmachine! thinkbook
