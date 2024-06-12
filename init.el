@@ -85,10 +85,9 @@
   "thinkbookpro"
   :init
   (progn
-    (egg:use-feature! ui +base16-themes)
-    (setq egg:ui/theme 'base16-catppuccin-mocha
-          egg:ui/font "IBM Plex Mono 12"
-          base16-theme-distinct-fringe-background nil)
+    (setq catppuccin-flavor 'latte
+          egg:ui/theme 'catppuccin
+          egg:ui/font "Red Hat Mono 12")
 
     (setq lsp-clangd-binary-path "/usr/bin/clangd")))
 
