@@ -125,9 +125,62 @@
       (keymap-global-set "C-h k" #'helpful-key)
       (keymap-global-set "C-h o" #'helpful-symbol)))
 
+  (egg:feature! +auto-theme
+    (require 'dbus)
+
+    (egg:defvar! egg:ui/color-scheme-change-hook '())
+
+    (egg:defun! egg:ui/get-current-color-scheme ()
+      (let ((color-scheme (caar (dbus-call-method
+                                 :session
+                                 "org.freedesktop.portal.Desktop"
+                                 "/org/freedesktop/portal/desktop"
+                                 "org.freedesktop.portal.Settings"
+                                 "Read"
+                                 "org.freedesktop.appearance"
+                                 "color-scheme"))))
+        (cond
+         ((equal color-scheme 0) 'light)
+         ((equal color-scheme 1) 'dark)
+         (t 'unknown))))
+
+    (egg:defun! egg:--ui-on-system-color-scheme-change (path key value)
+      (when (and (string= path "org.freedesktop.appearance")
+                 (string= key "color-scheme"))
+        (let* ((scheme-id (car value))
+               (color-scheme (cond
+                              ((equal scheme-id 0) 'light)
+                              ((equal scheme-id 1) 'dark)
+                              (t 'unknown))))
+          (dolist (hook egg:ui/color-scheme-change-hook)
+            (funcall hook color-scheme)))))
+
+    (dbus-register-signal :session
+                          "org.freedesktop.portal.Desktop"
+                          "/org/freedesktop/portal/desktop"
+                          "org.freedesktop.portal.Settings"
+                          "SettingChanged"
+                          #'egg:--ui-on-system-color-scheme-change))
+
   (egg:initmodule!
     (when egg:ui/theme
-      (load-theme egg:ui/theme t))
+      ;; FIXME: This is a bodge, make a nice interface to check for
+      ;; feature flags
+      (if (member '+auto-theme egg:--features)
+          (let ((color-scheme (egg:ui/get-current-color-scheme)))
+            (cond
+             ;; If a function is specified, we call it immediately
+             ;; (assuming it loads a theme), and then hook it up to
+             ;; changes in the system theme
+             ((functionp egg:ui/theme) (progn
+                                         (funcall egg:ui/theme color-scheme)
+                                         (add-hook 'egg:ui/color-scheme-change-hook egg:ui/theme)))
+             ;; Assume egg:ui/theme is of the form '((light . my-light-theme) (dark . my-dark-theme))
+             ((listp egg:ui/theme) (when-let ((theme (alist-get color-scheme egg:ui-theme)))
+                                     (load-theme theme t)))
+             ;; Give up, just try to load the theme specified as a symbol
+             (t (load-theme egg:ui/theme t))))
+        (load-theme egg:ui/theme t)))
 
     (when egg:ui/font
       (set-frame-font egg:ui/font t t))
