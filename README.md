@@ -2,7 +2,7 @@
 
 ---
 
-### Superceded by new (new config)[https://github.com/sugol-a/coremacs]
+### Superceded by new [new config](https://github.com/sugol-a/coremacs)
 
 My personal emacs config.
 
